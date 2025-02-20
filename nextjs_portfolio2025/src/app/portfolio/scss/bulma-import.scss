@@ -1,0 +1,7 @@
+// Optionally, override Bulma variables before importing Bulma's components
+// $primary: #ff0000; // Example: Customize the primary color
+
+@use "bulma/bulma";
+@use "custom-scss/bulma-template-personal.scss";
+@use "custom-scss/card-grid.scss";
+@use "custom-scss/mycustom-css.scss";

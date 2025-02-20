@@ -1,0 +1,57 @@
+# This is for local dev (e.g. laptop) development
+services:
+  postgres-dev-wnp-portfolio-2025:
+    image: postgres:latest
+    container_name: postgres-dev-wnp-portfolio-2025
+    env_file:
+      - ./postgres_portfolio2025/.postgres-env.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_portfolio2025/postgres_data:/var/lib/postgresql/data
+      - ./postgres_portfolio2025/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - wnp-network-dev
+
+  wagtail-dev-wnp-portfolio-2025:
+    container_name: wagtail-dev-wnp-portfolio-2025
+    image: wagtail-dev-wnp-portfolio-2025
+    build:
+      context: ./wagtail_cms_portfolio2025
+    env_file:
+      - ./wagtail_cms_portfolio2025/.env-wagtail-example
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./wagtail_cms_portfolio2025:/app  # For live code reloading
+      - ./wagtail_cms_portfolio2025/media:/app/media  # For persistent media uploads
+      - ./wagtail_cms_portfolio2025/static:/app/static  # For static files
+    depends_on:
+      - postgres-dev-wnp-portfolio-2025
+    networks:
+      - wnp-network-dev
+
+  nextjs-dev-wnp-portfolio-2025:
+    container_name: nextjs-dev-wnp-portfolio-2025
+    image: nextjs-dev-wnp-portfolio-2025
+    build:
+      context: ./nextjs_portfolio2025
+      target: dev
+    command: npm run dev
+    env_file:
+      - ./nextjs_portfolio2025/dev.env
+    volumes:
+      - ./nextjs_portfolio2025:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    networks:
+      - wnp-network-dev
+
+volumes:
+  postgres_data:
+
+networks:
+  wnp-network-dev:
+    name: wnp-network-dev

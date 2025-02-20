@@ -1,0 +1,8 @@
+# macOS system files
+.DS_Store
+**/.DS_Store
+
+# Postgres data directory
+postgres_portfolio2025/postgres_data/
+
+.venv
