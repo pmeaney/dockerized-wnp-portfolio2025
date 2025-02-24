@@ -1,0 +1,2 @@
+-- wagtail needs no initial sql schema, its migration will take care of that.
+-- but leaving this file for future reference

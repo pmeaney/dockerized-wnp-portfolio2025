@@ -1,0 +1,45 @@
+# .github/workflows/main.yml
+name: Main Deployment Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # First, check database status/initialize if needed
+  database:
+    uses: ./.github/workflows/ex2-db-init.yml
+
+  # Deploy CMS if needed - depends on DB being ready
+  cms:
+    needs: database
+    uses: ./.github/workflows/ex2-cms-check-deploy.yml
+
+  # Deploy frontend if needed - depends on DB being ready
+  frontend:
+    needs: cms
+    uses: ./.github/workflows/ex2-fe-check-deploy.yml
+
+  # Create a final summary of all actions taken
+  deployment-summary:
+    needs: [database, cms, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Summary
+        run: |
+          # Use GitHub's built-in step summary feature to create a markdown report
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+
+          # Database status section
+          echo "### Database" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ needs.database.outputs.db_exists == 'true' && 'Already exists' || 'Newly created' }}" >> $GITHUB_STEP_SUMMARY
+
+          # CMS deployment section
+          echo "### CMS" >> $GITHUB_STEP_SUMMARY
+          echo "- Changes detected: ${{ needs.cms.outputs.had_changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Action taken: ${{ needs.cms.outputs.action_taken }}" >> $GITHUB_STEP_SUMMARY
+
+          # Frontend deployment section
+          echo "### Frontend" >> $GITHUB_STEP_SUMMARY
+          echo "- Changes detected: ${{ needs.frontend.outputs.had_changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Action taken: ${{ needs.frontend.outputs.action_taken }}" >> $GITHUB_STEP_SUMMARY

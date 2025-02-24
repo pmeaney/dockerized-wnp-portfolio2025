@@ -1,0 +1,55 @@
+# .github/workflows/ex2-fe-check-deploy.yml
+name: Frontend Check and Deploy Simulation
+
+on:
+  workflow_call:
+    outputs:
+      had_changes:
+        description: "Whether changes were detected"
+        value: ${{ jobs.fe-deploy.outputs.changes_detected }}
+      action_taken:
+        description: "Action taken during deployment"
+        value: ${{ jobs.fe-deploy.outputs.action }}
+
+jobs:
+  fe-deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      changes_detected: ${{ steps.check-changes.outputs.changes }}
+      action: ${{ steps.deploy.outputs.action_taken }}
+
+    steps:
+      - name: Check Frontend Directory Changes
+        id: check-changes
+        run: |
+          echo "Checking for changes in frontend directory..."
+          echo "changes=false" >> $GITHUB_OUTPUT
+
+      - name: Build Image
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          echo "Building frontend Docker image..."
+          echo "BUILT=true" >> $GITHUB_ENV
+
+      - name: Push Image
+        if: env.BUILT == 'true'
+        run: |
+          echo "Pushing frontend image to registry..."
+          echo "PUSHED=true" >> $GITHUB_ENV
+
+      - name: Deploy
+        id: deploy
+        run: |
+          if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
+            echo "Deploying new frontend version..."
+            echo "action_taken=New version deployed" >> $GITHUB_OUTPUT
+          else
+            echo "No changes detected, skipping deployment"
+            echo "action_taken=No deployment needed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Status Report
+        run: |
+          echo "Frontend Deployment Status:"
+          echo "Changes Detected: ${{ steps.check-changes.outputs.changes }}"
+          echo "Action Taken: ${{ steps.deploy.outputs.action_taken }}"

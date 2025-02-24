@@ -1,0 +1,58 @@
+name: Database Check and Init Simulation
+
+on:
+  workflow_call:
+    outputs:
+      db_exists:
+        description: "Whether DB exists and is running"
+        value: ${{ jobs.check-db.outputs.exists }}
+
+jobs:
+  check-db:
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.process-check.outputs.db_status }}
+
+    steps:
+      # First establish SSH connection
+      - name: SSH Setup
+        id: ssh
+        run: |
+          echo "Connecting to ${{ secrets.SERVER_IP }}..."
+          echo "ssh_success=true" >> $GITHUB_OUTPUT
+
+      # Check DB container status
+      - name: Check Container Status
+        id: check
+        if: steps.ssh.outputs.ssh_success == 'true'
+        run: |
+          echo "Checking if container 'myapp-db' exists..."
+          # Simulating docker ps | grep check
+          echo "EXISTS=false" >> $GITHUB_ENV
+
+      # Process the check results
+      - name: Process Check Results
+        id: process-check
+        run: |
+          echo "Processing container check results..."
+          echo "db_status=$EXISTS" >> $GITHUB_OUTPUT
+
+      # Create DB if needed
+      - name: Create DB Container
+        id: create
+        if: steps.process-check.outputs.db_status == 'false'
+        run: |
+          echo "Creating database container..."
+          echo "Running: docker run -d --name myapp-db ..."
+          echo "DB_CREATED=true" >> $GITHUB_ENV
+
+      # Final status output
+      - name: Status Report
+        run: |
+          if [[ "$EXISTS" == "true" ]]; then
+            echo "Database container already exists"
+          elif [[ "$DB_CREATED" == "true" ]]; then
+            echo "Database container was created"
+          else
+            echo "Failed to verify database status"
+          fi
