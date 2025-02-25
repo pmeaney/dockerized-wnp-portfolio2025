@@ -8,17 +8,17 @@ on:
 jobs:
   # First, check database status/initialize if needed
   database:
-    uses: ./.github/workflows/ex2-db-init.yml
+    uses: ./.github/workflows/a-db-init.yml
 
   # Deploy CMS if needed - depends on DB being ready
   cms:
     needs: database
-    uses: ./.github/workflows/ex2-cms-check-deploy.yml
+    uses: ./.github/workflows/b-cms-check-deploy.yml
 
   # Deploy frontend if needed - depends on DB being ready
   frontend:
     needs: cms
-    uses: ./.github/workflows/ex2-fe-check-deploy.yml
+    uses: ./.github/workflows/c-fe-check-deploy.yml
 
   # Create a final summary of all actions taken
   deployment-summary:
@@ -32,7 +32,7 @@ jobs:
 
           # Database status section
           echo "### Database" >> $GITHUB_STEP_SUMMARY
-          echo "- Status: ${{ needs.database.outputs.db_exists == 'true' && 'Already exists' || 'Newly created' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ needs.database.outputs.needs_depl__db == 'false' && 'Already exists' || 'Newly created' }}" >> $GITHUB_STEP_SUMMARY
 
           # CMS deployment section
           echo "### CMS" >> $GITHUB_STEP_SUMMARY

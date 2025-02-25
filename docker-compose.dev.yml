@@ -19,7 +19,7 @@ services:
     build:
       context: ./wagtail_cms_portfolio2025
     env_file:
-      - ./wagtail_cms_portfolio2025/.env-wagtail-example
+      - ./wagtail_cms_portfolio2025/.env-wagtail.env
     ports:
       - "8000:8000"
     volumes:
@@ -39,7 +39,7 @@ services:
       target: dev
     command: npm run dev
     env_file:
-      - ./nextjs_portfolio2025/dev.env
+      - ./nextjs_portfolio2025/.nextjs-example-dev.env
     volumes:
       - ./nextjs_portfolio2025:/app
       - /app/node_modules

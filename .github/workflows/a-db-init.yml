@@ -1,0 +1,67 @@
+name: Database Check and Init Simulation
+
+on:
+  workflow_call:
+    outputs:
+      needs_depl__db:
+        description: "Whether DB needs deployment"
+        value: ${{ jobs.check-db.outputs.needs_depl__db }}
+
+jobs:
+  check-db:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_depl__db: ${{ steps.check-depl-needed--db.outputs.needs_depl__db }}
+
+    steps:
+      # Check DB container status
+      - name: Check if Postgres Deployment needed
+        id: check-depl-needed--db
+        env:
+          SSH_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.LINUX_USER_DEVOPS }}
+          SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
+          DEPLOY_POSTGRES_NEEDED: true
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          cat >>~/.ssh/config <<END
+          Host prod
+            HostName $SERVER_IP
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+          END
+
+          # Check if Postgres container exists
+          CONTAINER_EXISTS=$(ssh prod "docker ps -a --format '{{.Names}}' | grep -q '^postgres-prod-wnp-portfolio-2025$' && echo 'true' || echo 'false'")
+
+          if [ "$CONTAINER_EXISTS" = "false" ] && [ "${{ env.DEPLOY_POSTGRES_NEEDED }}" = "true" ]; then
+            echo "⚠️ No Postgres container found & desire to deploy it is ${{ env.DEPLOY_POSTGRES_NEEDED }}"
+            echo "needs_depl__db=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Postgres container exists. Will skip Postgres setup."
+            echo "needs_depl__db=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Create DB if needed
+      - name: Create DB Container
+        if: steps.check-depl-needed--db.outputs.needs_depl__db == 'true'
+        run: |
+          echo "Creating database container..."
+          echo "Running: docker run -d --name myapp-db ..."
+          echo "here I should verify the db container is running and only if it is, then set DB_CREATED=true"
+          echo "DB_CREATED=true" >> $GITHUB_ENV
+
+      # Final status output
+      - name: Status Report
+        run: |
+          if [[ "${{ steps.check-depl-needed--db.outputs.needs_depl__db }}" == "false" ]]; then
+            echo "Database container already existed"
+          elif [[ "$DB_CREATED" == "true" ]]; then
+            echo "Database container was created"
+          else
+            echo "Failed to verify database status"
+          fi

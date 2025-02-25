@@ -9,7 +9,6 @@
 #  and of course, ensure that those production secrets are brand new values for the relevant security-relevant items))
 ---
 nextjs_defaults: |
-  MAIN_SITE_BASE_URL=http://localhost:3000
   NEXT_PUBLIC_MAIN_SITE_BASE_URL=http://localhost:3000
   NODE_ENV=production
   HOSTNAME=0.0.0.0
