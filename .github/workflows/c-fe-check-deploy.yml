@@ -26,11 +26,22 @@ jobs:
       action: ${{ steps.deploy.outputs.action_taken }}
 
     steps:
-      - name: Check Frontend Directory Changes
-        id: check-changes
+      - name: Check NextJS Directory Changes
+        id: check-nextjs-changes
         run: |
-          echo "Checking for changes in frontend directory..."
-          echo "changes=false" >> $GITHUB_OUTPUT
+          echo "Checking for code changes in NextJS directory..."
+          
+          # Check if there are changes in the latest commit
+          CHANGES=$(git diff-tree --no-commit-id --name-only -r HEAD -- ./nextjs_portfolio2025)
+          
+          if [ -z "$CHANGES" ]; then
+            echo "No changes detected in nextjs_portfolio2025 directory"
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected in nextjs_portfolio2025 directory:"
+            echo "$CHANGES"
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build Image
         if: steps.check-changes.outputs.changes == 'true'

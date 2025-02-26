@@ -34,22 +34,16 @@ jobs:
         run: |
           echo "Checking for code changes in CMS directory..."
           
-          # Check if the directory exists
-          if [ -d "./wagtail_cms_portfolio2025" ]; then
-            # Find the last commit that changed files in the wagtail_cms_portfolio2025 directory
-            LAST_COMMIT=$(git log -1 --format="%H" -- ./wagtail_cms_portfolio2025)
-            
-            # Check if there are changes in the latest commit
-            if [ -n "$LAST_COMMIT" ] && git diff-tree --quiet HEAD^ HEAD -- ./wagtail_cms_portfolio2025; then
-              echo "No changes detected in wagtail_cms_portfolio2025 directory"
-              echo "changes=false" >> $GITHUB_OUTPUT
-            else
-              echo "Changes detected in wagtail_cms_portfolio2025 directory"
-              echo "changes=true" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "wagtail_cms_portfolio2025 directory not found!"
+          # Check if there are changes in the latest commit
+          CHANGES=$(git diff-tree --no-commit-id --name-only -r HEAD -- ./wagtail_cms_portfolio2025)
+          
+          if [ -z "$CHANGES" ]; then
+            echo "No changes detected in wagtail_cms_portfolio2025 directory"
             echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected in wagtail_cms_portfolio2025 directory:"
+            echo "$CHANGES"
+            echo "changes=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Build & Publish image
