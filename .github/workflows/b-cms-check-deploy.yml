@@ -2,6 +2,13 @@ name: CMS Check and Deploy Simulation
 
 on:
   workflow_call:
+    secrets:
+      LINUX_SSH_PRIVATE_KEY:
+        required: true
+      LINUX_USER_DEVOPS:
+        required: true
+      LINUX_SERVER_IP:
+        required: true
     outputs:
       had_changes:
         description: "Whether changes were detected"
@@ -18,27 +25,79 @@ jobs:
       action: ${{ steps.deploy.outputs.action_taken }}
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Check CMS Directory Changes
         id: check-changes
         run: |
-          echo "Checking for changes in CMS directory..."
+          echo "Checking for code changes in CMS directory..."
           echo "changes=true" >> $GITHUB_OUTPUT
 
-      - name: Build Image
+      - name: Build & Publish image
         if: steps.check-changes.outputs.changes == 'true'
         run: |
-          echo "Building CMS Docker image..."
+          echo "Building updated Wagtail CMS Docker image..."
           echo "BUILT=true" >> $GITHUB_ENV
 
-      - name: Push Image
-        if: env.BUILT == 'true'
-        run: |
-          echo "Pushing CMS image to registry..."
+          echo "Publishing updated Wagtail CMS Docker image..."
           echo "PUSHED=true" >> $GITHUB_ENV
 
-      - name: Deploy
-        id: deploy
+      - name: Ssh in and Deploy Updated CMS image
+        id: deploy--cms
+        env:
+          SSH_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.LINUX_USER_DEVOPS }}
+          SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
+          DEPLOY_POSTGRES_NEEDED: true
         run: |
+          # Debug environment variables
+          echo "Debug - Checking if variables are set:"
+          echo "SSH_USER is set: $(if [ -n "$SSH_USER" ]; then echo "YES"; else echo "NO"; fi)"
+          echo "SERVER_IP is set: $(if [ -n "$SERVER_IP" ]; then echo "YES"; else echo "NO"; fi)"
+
+          # Setup SSH
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          cat >>~/.ssh/config <<END
+          Host prod
+            HostName $SERVER_IP
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+          END
+
+          ssh prod << EOF
+          set -e
+
+          cd ~
+
+          #####
+          echo "Just a little check to make sure runner has sshed into the server"
+          # Get hostname - shows the server's configured name
+          echo "Remote hostname:"
+          "hostname"
+
+          # Get system information - shows OS details
+          echo "Remote system information:"
+          "cat /etc/os-release"
+
+          # Check running processes - shows what's running on the server
+          echo "Remote running Docker containers:"
+          "docker ps"
+
+          # Check server uptime - shows how long the server has been running
+          echo "Remote server uptime:"
+          "uptime"
+
+          # Get system resources - shows CPU and memory usage
+          echo "Remote system resources:"
+          "free -h && df -h"
+
+          #####
+
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
             echo "Deploying new CMS version..."
             echo "action_taken=New version deployed" >> $GITHUB_OUTPUT
@@ -46,9 +105,10 @@ jobs:
             echo "No changes detected, skipping deployment"
             echo "action_taken=No deployment needed" >> $GITHUB_OUTPUT
           fi
+          EOF
 
       - name: Status Report
         run: |
           echo "CMS Deployment Status:"
           echo "Changes Detected: ${{ steps.check-changes.outputs.changes }}"
-          echo "Action Taken: ${{ steps.deploy.outputs.action_taken }}"
+          echo "Action Taken: ${{ steps.deploy--cms.outputs.action_taken }}"
