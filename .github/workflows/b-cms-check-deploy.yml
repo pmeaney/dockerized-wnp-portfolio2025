@@ -81,8 +81,10 @@ jobs:
           "hostname"
 
           # Check running processes - shows what's running on the server
-          echo "Remote running Docker containers:"
-          "docker ps"
+          # didnt work:
+          # echo "Remote running Docker containers:"
+          # "docker ps"
+          which docker
 
           # Check server uptime - shows how long the server has been running
           echo "Remote server uptime:"
