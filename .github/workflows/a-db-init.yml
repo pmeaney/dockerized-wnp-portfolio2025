@@ -14,6 +14,10 @@ jobs:
       needs_depl__db: ${{ steps.check-depl-needed--db.outputs.needs_depl__db }}
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       # Check DB container status
       - name: Check if Postgres Deployment needed
         id: check-depl-needed--db
@@ -23,6 +27,11 @@ jobs:
           SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
           DEPLOY_POSTGRES_NEEDED: true
         run: |
+          # Debug environment variables
+          echo "Debug - Checking if variables are set:"
+          echo "SSH_USER is set: $(if [ -n "$SSH_USER" ]; then echo "YES"; else echo "NO"; fi)"
+          echo "SERVER_IP is set: $(if [ -n "$SERVER_IP" ]; then echo "YES"; else echo "NO"; fi)"
+
           # Setup SSH
           mkdir -p ~/.ssh/
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
