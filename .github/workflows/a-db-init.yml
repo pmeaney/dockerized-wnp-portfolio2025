@@ -2,6 +2,13 @@ name: Database Check and Init Simulation
 
 on:
   workflow_call:
+    secrets:
+      LINUX_SSH_PRIVATE_KEY:
+        required: true
+      LINUX_USER_DEVOPS:
+        required: true
+      LINUX_SERVER_IP:
+        required: true
     outputs:
       needs_depl__db:
         description: "Whether DB needs deployment"
