@@ -84,7 +84,7 @@ jobs:
           # didnt work:
           # echo "Remote running Docker containers:"
           # "docker ps"
-          echo "Docker path:
+          echo "Docker path: "
           which docker
           /usr/bin/docker ps -a
 
