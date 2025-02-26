@@ -80,10 +80,6 @@ jobs:
           echo "Remote hostname:"
           "hostname"
 
-          # Get system information - shows OS details
-          echo "Remote system information:"
-          "cat /etc/os-release"
-
           # Check running processes - shows what's running on the server
           echo "Remote running Docker containers:"
           "docker ps"
