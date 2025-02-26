@@ -31,7 +31,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check NextJS Directory Changes
-        id: check-nextjs-changes
+        id: check-changes
         run: |
           echo "Checking for code changes in NextJS directory..."
           
