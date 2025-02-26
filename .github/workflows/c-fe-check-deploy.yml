@@ -26,6 +26,10 @@ jobs:
       action: ${{ steps.deploy.outputs.action_taken }}
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Check NextJS Directory Changes
         id: check-nextjs-changes
         run: |
