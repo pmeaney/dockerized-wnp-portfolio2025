@@ -84,15 +84,29 @@ jobs:
           # didnt work:
           # echo "Remote running Docker containers:"
           # "docker ps"
+          echo "Docker path:
           which docker
+          /usr/bin/docker ps -a
 
           # Check server uptime - shows how long the server has been running
           echo "Remote server uptime:"
           "uptime"
 
-          # Get system resources - shows CPU and memory usage
+          #### EXPERIMENT
+          # Force a login shell environment
+          export PATH=/usr/bin:/bin:/usr/local/bin:/sbin:/usr/sbin:\$PATH
+          # Print current PATH for debugging
+          echo "Current PATH: \$PATH"
+          # Try to locate the commands
+          which free
+          which df
+          # Run the commands with full paths
           echo "Remote system resources:"
-          "free -h && df -h"
+          /usr/bin/free -h && /bin/df -h
+
+          # Get system resources - shows CPU and memory usage
+          # echo "Remote system resources:"
+          # "free -h && df -h"
 
           #####
 
