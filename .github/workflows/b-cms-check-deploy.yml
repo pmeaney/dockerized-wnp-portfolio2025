@@ -46,13 +46,44 @@ jobs:
             echo "changes=true" >> $GITHUB_OUTPUT
           fi
 
+      
+      - name: Install YQ
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+
+      - name: Load Environment Defaults
+        id: env-defaults
+        run: |
+          # Extract Wagtail environment variables from defaults file
+          WAGTAIL_DEFAULTS=$(yq e '.wagtail_defaults' .github/defaults/env-defaults.yml)
+          echo "$WAGTAIL_DEFAULTS" > ./wagtail_cms_portfolio2025/.env-wagtail-prod.env
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
+
       - name: Build & Publish image
         if: steps.check-changes.outputs.changes == 'true'
         run: |
           echo "Building updated Wagtail CMS Docker image..."
+          
+          # Build the Wagtail CMS Docker image with env file
+          docker build \
+            --build-arg ENV_FILE=.env-wagtail-prod.env \
+            -t ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest \
+            ./wagtail_cms_portfolio2025
+          
+          # Push the Docker image to GitHub Container Registry
+          docker push ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest
+          
+          # Clean up
+          rm ./wagtail_cms_portfolio2025/.env-wagtail-prod.env
+          
           echo "BUILT=true" >> $GITHUB_ENV
-
-          echo "Publishing updated Wagtail CMS Docker image..."
           echo "PUSHED=true" >> $GITHUB_ENV
 
       - name: Ssh in and Deploy Updated CMS image
