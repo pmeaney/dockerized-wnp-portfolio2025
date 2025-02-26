@@ -13,7 +13,7 @@ export default function HeroHeader() {
             </Link>
           </h1>
           <h2 className={`subtitle is-4 ${nunitoSemiBold.className}`}>
-            Web App Software Engineer
+            Web App & DevOps Engineer
           </h2>
         </div>
         <SimpleNavBar />
