@@ -47,6 +47,9 @@ jobs:
       - name: Deploy
         id: deploy
         run: |
+          #########################
+          ## For deployment, dont forget to connect the container to network main-network--npm020325
+          #########################
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
             echo "Deploying new frontend version..."
             echo "action_taken=New version deployed" >> $GITHUB_OUTPUT

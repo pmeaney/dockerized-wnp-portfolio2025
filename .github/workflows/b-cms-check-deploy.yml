@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       changes_detected: ${{ steps.check-changes.outputs.changes }}
-      action: ${{ steps.deploy.outputs.action_taken }}
+      action: ${{ steps.deploy--cms.outputs.action_taken }}
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,24 @@ jobs:
         id: check-changes
         run: |
           echo "Checking for code changes in CMS directory..."
-          echo "changes=true" >> $GITHUB_OUTPUT
+          
+          # Check if the directory exists
+          if [ -d "./wagtail_cms_portfolio2025" ]; then
+            # Find the last commit that changed files in the wagtail_cms_portfolio2025 directory
+            LAST_COMMIT=$(git log -1 --format="%H" -- ./wagtail_cms_portfolio2025)
+            
+            # Check if there are changes in the latest commit
+            if [ -n "$LAST_COMMIT" ] && git diff-tree --quiet HEAD^ HEAD -- ./wagtail_cms_portfolio2025; then
+              echo "No changes detected in wagtail_cms_portfolio2025 directory"
+              echo "changes=false" >> $GITHUB_OUTPUT
+            else
+              echo "Changes detected in wagtail_cms_portfolio2025 directory"
+              echo "changes=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "wagtail_cms_portfolio2025 directory not found!"
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build & Publish image
         if: steps.check-changes.outputs.changes == 'true'
@@ -78,7 +95,7 @@ jobs:
           echo "Just a little check to make sure runner has sshed into the server"
           # Get hostname - shows the server's configured name
           echo "Remote hostname:"
-          "hostname"
+          hostname
 
           # Check running processes - shows what's running on the server
           # didnt work:
@@ -103,9 +120,10 @@ jobs:
           # Run the commands with full paths
           echo "Remote system resources:"
           /usr/bin/free -h && /bin/df -h
-
-          #####
-
+          EOF
+          #########################
+          ## For deployment, dont forget to connect the container to network main-network--npm020325
+          #########################
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
             echo "Deploying new CMS version..."
             echo "action_taken=New version deployed" >> $GITHUB_OUTPUT
@@ -113,7 +131,6 @@ jobs:
             echo "No changes detected, skipping deployment"
             echo "action_taken=No deployment needed" >> $GITHUB_OUTPUT
           fi
-          EOF
 
       - name: Status Report
         run: |

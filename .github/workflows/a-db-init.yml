@@ -66,6 +66,10 @@ jobs:
       - name: Create DB Container
         if: steps.check-depl-needed--db.outputs.needs_depl__db == 'true'
         run: |
+
+          #####
+          ## For deployment, dont forget to connect the container to network main-network--npm020325
+          #####
           echo "Creating database container..."
           echo "Running: docker run -d --name myapp-db ..."
           echo "here I should verify the db container is running and only if it is, then set DB_CREATED=true"
