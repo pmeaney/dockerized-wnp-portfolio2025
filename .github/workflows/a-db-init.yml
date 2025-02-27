@@ -130,7 +130,7 @@ jobs:
             exit 1
           fi
           
-          # Clean up local file after transfer
+          ## Clean up local file after transfer
           rm postgres_portfolio2025/.postgres-env.env
           
 
