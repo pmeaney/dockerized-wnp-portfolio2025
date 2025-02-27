@@ -22,6 +22,7 @@ jobs:
       LINUX_SSH_PRIVATE_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
       LINUX_USER_DEVOPS: ${{ secrets.LINUX_USER_DEVOPS }}
       LINUX_SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
+      GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
 
   # Deploy frontend if needed - depends on DB being ready
   frontend:
@@ -31,6 +32,7 @@ jobs:
       LINUX_SSH_PRIVATE_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
       LINUX_USER_DEVOPS: ${{ secrets.LINUX_USER_DEVOPS }}
       LINUX_SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
+      GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
 
   # Create a final summary of all actions taken
   deployment-summary:
