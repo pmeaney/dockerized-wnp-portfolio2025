@@ -105,40 +105,33 @@ jobs:
           # Create directories on remote server for the env file and volumes
           ssh prod "mkdir -p ~/postgres_portfolio2025/postgres_data ~/postgres_portfolio2025/init-scripts"
           
-          # Copy the environment file from CICD Runner to the remote server (here, prod refers to the SSH Config Host "prod"-- e.g. the CICD runner logs in via `ssh prod` hence it uses `scp ... prod:`)
+          # Copy the environment file to the remote server
           scp postgres_portfolio2025/.postgres-env.env prod:~/postgres_portfolio2025/.postgres-env.env
           
           # Run the container on the remote server
-          ssh prod << EOF
-          set -e
-          cd ~
+          ssh prod "cd ~ && \
+            echo 'Creating database container...' && \
+            docker run -d \
+              --name postgres-dev-wnp-portfolio-2025 \
+              --network main-network--npm020325 \
+              --env-file ./postgres_portfolio2025/.postgres-env.env \
+              -p 5432:5432 \
+              -v \$(pwd)/postgres_portfolio2025/postgres_data:/var/lib/postgresql/data \
+              -v \$(pwd)/postgres_portfolio2025/init-scripts:/docker-entrypoint-initdb.d \
+              postgres:17"
           
-          echo "Creating database container..."
-          docker run -d \
-            --name postgres-prod-wnp-portfolio-2025 \
-            --network main-network--npm020325 \
-            --env-file ./postgres_portfolio2025/.postgres-env.env \
-            -p 5432:5432 \
-            -v \$(pwd)/postgres_portfolio2025/postgres_data:/var/lib/postgresql/data \
-            -v \$(pwd)/postgres_portfolio2025/init-scripts:/docker-entrypoint-initdb.d \
-            postgres:17
-          
-          # Verify the container is running
-          CONTAINER_STATUS=\$(docker ps -f name=postgres-prod-wnp-portfolio-2025 --format '{{.Status}}')
-          if [ -n "\$CONTAINER_STATUS" ]; then
+          # Verify the container is running in a separate command
+          CONTAINER_STATUS=$(ssh prod "docker ps -f name=postgres-dev-wnp-portfolio-2025 --format '{{.Status}}'")
+          if [ -n "$CONTAINER_STATUS" ]; then
             echo "Database container successfully created and running"
-            exit 0
+            echo "DB_CREATED=true" >> $GITHUB_ENV
           else
             echo "Failed to create database container"
             exit 1
           fi
-          EOF
           
           # Clean up local file after transfer
           rm postgres_portfolio2025/.postgres-env.env
-          
-          # If the SSH command was successful, set the environment variable
-          echo "DB_CREATED=true" >> $GITHUB_ENV
           
 
       # Final status output
