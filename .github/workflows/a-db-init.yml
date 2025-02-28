@@ -112,7 +112,7 @@ jobs:
           ssh prod "cd ~ && \
             echo 'Creating database container...' && \
             docker run -d \
-              --name postgres-dev-wnp-portfolio-2025 \
+              --name postgres-prod-wnp-portfolio-2025 \
               --network main-network--npm020325 \
               --env-file ./postgres_portfolio2025/.postgres-env.env \
               -p 5432:5432 \
@@ -121,7 +121,7 @@ jobs:
               postgres:17"
           
           # Verify the container is running in a separate command
-          CONTAINER_STATUS=$(ssh prod "docker ps -f name=postgres-dev-wnp-portfolio-2025 --format '{{.Status}}'")
+          CONTAINER_STATUS=$(ssh prod "docker ps -f name=postgres-prod-wnp-portfolio-2025 --format '{{.Status}}'")
           if [ -n "$CONTAINER_STATUS" ]; then
             echo "Database container successfully created and running"
             echo "DB_CREATED=true" >> $GITHUB_ENV
