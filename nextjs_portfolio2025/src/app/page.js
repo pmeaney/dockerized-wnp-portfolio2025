@@ -252,6 +252,8 @@ export default function Home() {
           <br />
           <div className="container">
             <div className="tags custom-tags">
+              <span className="tag is-light">Sales / Solutions Engineering</span>
+              <span className="tag is-light">Marketing Systems Engineering</span>
               <span className="tag is-light">Docker</span>
               <span className="tag is-light">Kubernetes (hungry newb)</span>
               <span className="tag is-light">CircleCI CICD</span>

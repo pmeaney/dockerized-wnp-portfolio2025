@@ -24,8 +24,7 @@ jobs:
       LINUX_SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
       GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
 
-  # Deploy frontend if needed - Theres not really much dependency on the CMS for this low traffic expected project,
-  # but we'll do it for as a good practice, and because it makes the CICD workflow visualization look nice & structured
+  # Deploy frontend if needed
   frontend:
     needs: cms
     uses: ./.github/workflows/c-fe-check-deploy.yml
@@ -35,26 +34,141 @@ jobs:
       LINUX_SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
       GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
 
-  # Create a final summary of all actions taken
+  # Create a comprehensive deployment summary with enhanced tracking information
   deployment-summary:
     needs: [database, cms, frontend]
     runs-on: ubuntu-latest
     steps:
-      - name: Create Summary
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Get full history for commit information
+
+      # Download deployment markers to include in the summary
+      - name: Download CMS deployment marker
+        id: download-cms-marker
+        continue-on-error: true
+        uses: actions/download-artifact@v3
+        with:
+          name: cms-last-deployed-commit
+          path: ./deployment-markers/cms
+
+      - name: Download FE deployment marker
+        id: download-fe-marker
+        continue-on-error: true
+        uses: actions/download-artifact@v3
+        with:
+          name: fe-last-deployed-commit
+          path: ./deployment-markers/fe
+      
+      - name: Create Enhanced Deployment Summary
         run: |
-          # Use GitHub's built-in step summary feature to create a markdown report
-          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          # Collect information about the current and last deployed commits
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          CURRENT_COMMIT_SHORT=$(git rev-parse --short HEAD)
+          CURRENT_COMMIT_DATE=$(git show -s --format=%ci $CURRENT_COMMIT)
+          CURRENT_COMMIT_AUTHOR=$(git show -s --format=%an $CURRENT_COMMIT)
+          CURRENT_COMMIT_MESSAGE=$(git show -s --format=%s $CURRENT_COMMIT)
+          
+          # Get CMS last deployed commit info if available
+          if [ -f "./deployment-markers/cms/last-cms-commit.txt" ]; then
+            CMS_LAST_COMMIT=$(cat ./deployment-markers/cms/last-cms-commit.txt)
+            CMS_LAST_COMMIT_SHORT=$(git rev-parse --short $CMS_LAST_COMMIT)
+            CMS_LAST_COMMIT_DATE=$(git show -s --format=%ci $CMS_LAST_COMMIT)
+            CMS_CHANGES_COUNT=$(git diff --name-only $CMS_LAST_COMMIT $CURRENT_COMMIT -- ./wagtail_cms_portfolio2025 | wc -l)
+            CMS_DEPLOYED_NOW="${{ needs.cms.outputs.had_changes }}"
+          else
+            CMS_LAST_COMMIT="No previous deployment"
+            CMS_LAST_COMMIT_SHORT="N/A"
+            CMS_LAST_COMMIT_DATE="N/A"
+            CMS_CHANGES_COUNT="N/A (first deployment)"
+            CMS_DEPLOYED_NOW="${{ needs.cms.outputs.had_changes }}"
+          fi
+          
+          # Get Frontend last deployed commit info if available
+          if [ -f "./deployment-markers/fe/last-fe-commit.txt" ]; then
+            FE_LAST_COMMIT=$(cat ./deployment-markers/fe/last-fe-commit.txt)
+            FE_LAST_COMMIT_SHORT=$(git rev-parse --short $FE_LAST_COMMIT)
+            FE_LAST_COMMIT_DATE=$(git show -s --format=%ci $FE_LAST_COMMIT)
+            FE_CHANGES_COUNT=$(git diff --name-only $FE_LAST_COMMIT $CURRENT_COMMIT -- ./nextjs_portfolio2025 | wc -l)
+            FE_DEPLOYED_NOW="${{ needs.frontend.outputs.had_changes }}"
+          else
+            FE_LAST_COMMIT="No previous deployment"
+            FE_LAST_COMMIT_SHORT="N/A"
+            FE_LAST_COMMIT_DATE="N/A"
+            FE_CHANGES_COUNT="N/A (first deployment)"
+            FE_DEPLOYED_NOW="${{ needs.frontend.outputs.had_changes }}"
+          fi
 
-          # Database status section
-          echo "### Database" >> $GITHUB_STEP_SUMMARY
-          echo "- Status: ${{ needs.database.outputs.needs_depl__db == 'false' && 'Already exists' || 'Newly created' }}" >> $GITHUB_STEP_SUMMARY
+          # Create the deployment summary
+          echo "# 📊 Deployment Summary for Commit ${CURRENT_COMMIT_SHORT}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔄 Current Workflow Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| ------ | ----- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${CURRENT_COMMIT_SHORT}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Date** | ${CURRENT_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Author** | ${CURRENT_COMMIT_AUTHOR} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Message** | ${CURRENT_COMMIT_MESSAGE} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-          # CMS deployment section
-          echo "### CMS" >> $GITHUB_STEP_SUMMARY
-          echo "- Changes detected: ${{ needs.cms.outputs.had_changes }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Action taken: ${{ needs.cms.outputs.action_taken }}" >> $GITHUB_STEP_SUMMARY
+          # Database section
+          echo "## 💾 Database" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.database.outputs.needs_depl__db }}" == "true" ]]; then
+            echo "✅ **Action taken**: Database container was newly created" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ **Action taken**: Database container already existed, no action needed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Frontend deployment section
-          echo "### Frontend" >> $GITHUB_STEP_SUMMARY
-          echo "- Changes detected: ${{ needs.frontend.outputs.had_changes }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Action taken: ${{ needs.frontend.outputs.action_taken }}" >> $GITHUB_STEP_SUMMARY
+          # CMS deployment section with enhanced tracking
+          echo "## 🖥️ CMS (Wagtail)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| ------ | ----- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Last deployed commit** | \`${CMS_LAST_COMMIT_SHORT}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Last deployment date** | ${CMS_LAST_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Changes detected** | ${CMS_DEPLOYED_NOW} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Number of changes** | ${CMS_CHANGES_COUNT} files |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Action taken** | ${{ needs.cms.outputs.action_taken }} |" >> $GITHUB_STEP_SUMMARY
+          
+          # If changes were detected, show what changed
+          if [[ "${{ needs.cms.outputs.had_changes }}" == "true" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📝 CMS Changes" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            if [ -f "./deployment-markers/cms/last-cms-commit.txt" ]; then
+              git diff --name-status $CMS_LAST_COMMIT $CURRENT_COMMIT -- ./wagtail_cms_portfolio2025 >> $GITHUB_STEP_SUMMARY
+            else
+              echo "First deployment - all files are new" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Frontend deployment section with enhanced tracking
+          echo "## 🌐 Frontend (NextJS)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| ------ | ----- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Last deployed commit** | \`${FE_LAST_COMMIT_SHORT}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Last deployment date** | ${FE_LAST_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Changes detected** | ${FE_DEPLOYED_NOW} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Number of changes** | ${FE_CHANGES_COUNT} files |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Action taken** | ${{ needs.frontend.outputs.action_taken }} |" >> $GITHUB_STEP_SUMMARY
+          
+          # If changes were detected, show what changed
+          if [[ "${{ needs.frontend.outputs.had_changes }}" == "true" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📝 Frontend Changes" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            if [ -f "./deployment-markers/fe/last-fe-commit.txt" ]; then
+              git diff --name-status $FE_LAST_COMMIT $CURRENT_COMMIT -- ./nextjs_portfolio2025 >> $GITHUB_STEP_SUMMARY
+            else
+              echo "First deployment - all files are new" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
