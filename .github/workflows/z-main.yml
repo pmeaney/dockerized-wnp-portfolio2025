@@ -47,7 +47,7 @@ jobs:
       - name: Download CMS deployment marker
         id: download-cms-marker
         continue-on-error: true
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: cms-last-deployed-commit
           path: ./deployment-markers/cms
@@ -55,7 +55,7 @@ jobs:
       - name: Download FE deployment marker
         id: download-fe-marker
         continue-on-error: true
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: fe-last-deployed-commit
           path: ./deployment-markers/fe

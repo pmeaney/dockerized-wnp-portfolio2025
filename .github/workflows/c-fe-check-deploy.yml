@@ -35,7 +35,7 @@ jobs:
       - name: Download last successful deployment marker
         id: download-marker
         continue-on-error: true  # Continue if no marker exists yet
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: fe-last-deployed-commit
           path: ./deployment-markers
@@ -162,7 +162,7 @@ jobs:
 
       - name: Upload deployment marker
         if: steps.check-changes.outputs.changes == 'true' && env.deploy_status == 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fe-last-deployed-commit
           path: ./deployment-markers/last-fe-commit.txt
