@@ -22,6 +22,9 @@ on:
 jobs:
   cms-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write  # Needed for artifact operations
     outputs:
       changes_detected: ${{ steps.check-changes.outputs.changes }}
       action: ${{ steps.deploy--cms.outputs.action_taken }}
@@ -31,16 +34,29 @@ jobs:
         with:
           fetch-depth: 0  # Full history needed for better change detection
 
+      # Setup GitHub CLI for artifact operations
+      - name: Setup GitHub CLI
+        run: |
+          echo "Setting up GitHub CLI authentication..."
+          echo ${{ github.token }} | gh auth login --with-token
+
       # Download last successful deployment marker if it exists
       - name: Download last successful deployment marker
         id: download-marker
         continue-on-error: true  # Continue if no marker exists yet
-        uses: actions/download-artifact@v4
-        with:
-          name: cms-last-deployed-commit
-          path: ./deployment-markers
-          search-artifacts: true  # Search across workflow runs
-          if-no-artifact-found: warn
+        run: |
+          mkdir -p ./deployment-markers
+          
+          # Try to download the artifact using the GitHub CLI
+          echo "Attempting to download latest cms-last-deployed-commit artifact..."
+          gh artifact download cms-last-deployed-commit --dir ./deployment-markers --repo ${{ github.repository }} || true
+          
+          # Check if the download was successful
+          if [ -f "./deployment-markers/last-cms-commit.txt" ]; then
+            echo "✅ Successfully downloaded previous deployment marker"
+          else
+            echo "⚠️ No previous deployment marker found or download failed"
+          fi
 
       # Determine last deployed commit hash
       - name: Get last deployed commit hash
@@ -180,6 +196,7 @@ jobs:
           git rev-parse HEAD > ./deployment-markers/last-cms-commit.txt
           echo "Saved current commit as last deployed commit marker"
 
+      # Upload the marker as an artifact
       - name: Upload deployment marker
         if: steps.check-changes.outputs.changes == 'true' && env.deploy_status == 'success'
         uses: actions/upload-artifact@v4
