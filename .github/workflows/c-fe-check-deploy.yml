@@ -61,6 +61,9 @@ jobs:
         run: |
           echo "Checking for code changes in NextJS directory since last deployment..."
           
+          # Debug: Show the commit we're comparing against
+          echo "Comparing current commit with: ${{ steps.get-last-commit.outputs.last_commit }}"
+          
           # Check for changes between last deployed commit and current HEAD
           CHANGES=$(git diff --name-only ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./nextjs_portfolio2025)
           
@@ -124,21 +127,23 @@ jobs:
           GHPAT: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
         run: |
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
-            # Setup SSH
+            # Setup SSH - simplified approach
             mkdir -p ~/.ssh/
             echo "$SSH_KEY" > ~/.ssh/id_ed25519
             chmod 600 ~/.ssh/id_ed25519
-            cat > ~/.ssh/config << 'EOF'
-          Host prod
-            HostName $SERVER_IP
-            User $SSH_USER
-            IdentityFile ~/.ssh/id_ed25519
-            StrictHostKeyChecking no
-          EOF
             
-            # Update the config file with actual values
-            sed -i "s|\$SERVER_IP|$SERVER_IP|g" ~/.ssh/config
-            sed -i "s|\$SSH_USER|$SSH_USER|g" ~/.ssh/config
+            # Create SSH config with direct variable expansion
+            cat > ~/.ssh/config << EOF
+            Host prod
+              HostName $SERVER_IP
+              User $SSH_USER
+              IdentityFile ~/.ssh/id_ed25519
+              StrictHostKeyChecking no
+            EOF
+            
+            # Verify connection to server with simple commands
+            echo "Verifying server connection..."
+            ssh prod "hostname && which docker && uptime"
             
             # First authenticate with GHCR on the remote server
             echo "Authenticating with GitHub Container Registry on remote server..."

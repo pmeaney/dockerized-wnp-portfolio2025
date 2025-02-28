@@ -61,6 +61,9 @@ jobs:
         run: |
           echo "Checking for code changes in CMS directory since last deployment..."
           
+          # Debug: Show the commit we're comparing against
+          echo "Comparing current commit with: ${{ steps.get-last-commit.outputs.last_commit }}"
+          
           # Check for changes between last deployed commit and current HEAD
           CHANGES=$(git diff --name-only ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./wagtail_cms_portfolio2025)
           
@@ -128,35 +131,23 @@ jobs:
           echo "SERVER_IP is set: $(if [ -n "$SERVER_IP" ]; then echo "YES"; else echo "NO"; fi)"
           echo "GHPAT is set: $(if [ -n "$GHPAT" ]; then echo "YES"; else echo "NO"; fi)"
 
-          # Setup SSH
+          # Setup SSH - simplified approach
           mkdir -p ~/.ssh/
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          cat >>~/.ssh/config <<END
+          
+          # Create SSH config with direct variable expansion
+          cat > ~/.ssh/config << EOF
           Host prod
             HostName $SERVER_IP
             User $SSH_USER
             IdentityFile ~/.ssh/id_ed25519
             StrictHostKeyChecking no
-          END
-
-          ssh prod << EOF
-          set -e
-
-          cd ~
-
-          # Verify connection to server
-          echo "Remote hostname: $(hostname)"
-          echo "Docker path: $(which docker)"
-          /usr/bin/docker ps -a
-
-          # Check server uptime
-          echo "Remote server uptime: $(uptime)"
-
-          # Force a login shell environment
-          export PATH=/usr/bin:/bin:/usr/local/bin:/sbin:/usr/sbin:\$PATH
-          echo "Current PATH: \${PATH}"
           EOF
+
+          # Verify connection to server with simple commands
+          echo "Verifying server connection..."
+          ssh prod "hostname && which docker && /usr/bin/docker ps -a && uptime"
 
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
             # First authenticate with GHCR on the remote server
