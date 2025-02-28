@@ -128,13 +128,17 @@ jobs:
             mkdir -p ~/.ssh/
             echo "$SSH_KEY" > ~/.ssh/id_ed25519
             chmod 600 ~/.ssh/id_ed25519
-            cat >>~/.ssh/config <<END
-            Host prod
-              HostName $SERVER_IP
-              User $SSH_USER
-              IdentityFile ~/.ssh/id_ed25519
-              StrictHostKeyChecking no
-            END
+            cat > ~/.ssh/config << 'EOF'
+          Host prod
+            HostName $SERVER_IP
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+          EOF
+            
+            # Update the config file with actual values
+            sed -i "s|\$SERVER_IP|$SERVER_IP|g" ~/.ssh/config
+            sed -i "s|\$SSH_USER|$SSH_USER|g" ~/.ssh/config
             
             # First authenticate with GHCR on the remote server
             echo "Authenticating with GitHub Container Registry on remote server..."
