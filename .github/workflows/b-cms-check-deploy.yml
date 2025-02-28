@@ -120,11 +120,13 @@ jobs:
           SSH_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
           SSH_USER: ${{ secrets.LINUX_USER_DEVOPS }}
           SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
+          GHPAT: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
         run: |
           # Debug environment variables
           echo "Debug - Checking if variables are set:"
           echo "SSH_USER is set: $(if [ -n "$SSH_USER" ]; then echo "YES"; else echo "NO"; fi)"
           echo "SERVER_IP is set: $(if [ -n "$SERVER_IP" ]; then echo "YES"; else echo "NO"; fi)"
+          echo "GHPAT is set: $(if [ -n "$GHPAT" ]; then echo "YES"; else echo "NO"; fi)"
 
           # Setup SSH
           mkdir -p ~/.ssh/
@@ -153,10 +155,14 @@ jobs:
 
           # Force a login shell environment
           export PATH=/usr/bin:/bin:/usr/local/bin:/sbin:/usr/sbin:\$PATH
-          echo "Current PATH: ${PATH}"
+          echo "Current PATH: \${PATH}"
           EOF
 
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
+            # First authenticate with GHCR on the remote server
+            echo "Authenticating with GitHub Container Registry on remote server..."
+            ssh prod "echo '$GHPAT' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+            
             # Deploy using docker run with network connection
             ssh prod "docker pull ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest && \
                       docker rm -f wagtail-prod-wnp-portfolio-2025 || true && \

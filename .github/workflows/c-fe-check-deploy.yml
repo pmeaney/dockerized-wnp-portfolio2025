@@ -121,6 +121,7 @@ jobs:
           SSH_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
           SSH_USER: ${{ secrets.LINUX_USER_DEVOPS }}
           SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
+          GHPAT: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
         run: |
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
             # Setup SSH
@@ -134,6 +135,10 @@ jobs:
               IdentityFile ~/.ssh/id_ed25519
               StrictHostKeyChecking no
             END
+            
+            # First authenticate with GHCR on the remote server
+            echo "Authenticating with GitHub Container Registry on remote server..."
+            ssh prod "echo '$GHPAT' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
             
             # Deploy to remote server
             ssh prod "docker pull ghcr.io/pmeaney/nextjs-prod-wnp-portfolio-2025:latest && \
