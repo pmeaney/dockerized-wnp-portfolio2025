@@ -252,12 +252,19 @@ export default function Home() {
           <br />
           <div className="container">
             <div className="tags custom-tags">
+              <span className="tag is-light">Docker</span>
+              <span className="tag is-light">Kubernetes (hungry newb)</span>
+              <span className="tag is-light">CircleCI CICD</span>
+              <span className="tag is-light">Github Actions CICD</span>
               <span className="tag is-light">Linux</span>
               <span className="tag is-light">NGINX</span>
-              <span className="tag is-light">Node.js</span>
-              <span className="tag is-light">Express.js</span>
               <span className="tag is-light">JavaScript</span>
+              <span className="tag is-light">NodeJS</span>
+              <span className="tag is-light">ExpressJS</span>
+              <span className="tag is-light">ReactJS</span>
+              <span className="tag is-light">Strapi CMS</span>
               <span className="tag is-light">Python</span>
+              <span className="tag is-light">Wagtail CMS</span>
               <span className="tag is-light">R (statistics)</span>
               <span className="tag is-light">AWS Cloud</span>
               <span className="tag is-light">AWS Lambda</span>
@@ -272,9 +279,11 @@ export default function Home() {
               <span className="tag is-light">Relational Database Design</span>
               <span className="tag is-light">SQL</span>
               <span className="tag is-light">NoSQL</span>
-              <span className="tag is-light">Data pipelines / ETL</span>
               <span className="tag is-light">Data Visualization</span>
               <span className="tag is-light">Data Engineering</span>
+              <span className="tag is-light">Data pipelines / ETL</span>
+              <span className="tag is-light">Marketing Application Integrations</span>
+              <span className="tag is-light">Marketo & Other CRMs</span>
               <span className="tag is-light">
                 REST API Design & Development
               </span>
