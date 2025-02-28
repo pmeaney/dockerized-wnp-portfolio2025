@@ -39,6 +39,8 @@ jobs:
         with:
           name: cms-last-deployed-commit
           path: ./deployment-markers
+          search-artifacts: true  # Search across workflow runs
+          if-no-artifact-found: warn
 
       # Determine last deployed commit hash
       - name: Get last deployed commit hash
