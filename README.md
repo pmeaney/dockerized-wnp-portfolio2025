@@ -7,7 +7,7 @@ Stack: Wagtail CMS, NextJS FE, Postgres DB
 Current focus: CICD Deployment
 - Get CICD Deployment working in a good way
   - DB: just deploy once
-  - CMS & FE: Check for changes in directories by comparing current vs most recent commit. Track most recent commit in github artifact file so it persists between deployments.
+  - CMS & FE: Check for changes in directories by comparing current vs most recently deployed commit. Track most recent commit in github artifact file so it persists between deployments.  Ideally, we'll account for edge cases mentioned in [./docs](./docs).
 
 To Do:
 - [ ] Finish CICD
@@ -26,4 +26,4 @@ cd dockerized-wnp-portfolio2025 && \
 docker compose -f docker-compose.dev.yml up
 ```
 
-See the ./docs directory for additional setup information, such as Github Secrets, and Env Vars
+See the [./docs](./docs) directory for additional setup information, such as Github Secrets, and Env Vars
