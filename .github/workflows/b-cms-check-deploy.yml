@@ -83,6 +83,14 @@ jobs:
           # Debug: Show the commit we're comparing against
           echo "Comparing current commit with: ${{ steps.get-last-commit.outputs.last_commit }}"
           
+          # List all files in the wagtail directory
+          echo "Files in wagtail directory:"
+          ls -la ./wagtail_cms_portfolio2025
+          
+          # Show raw git diff output
+          echo "Raw git diff output:"
+          git diff ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./wagtail_cms_portfolio2025
+          
           # Check for changes between last deployed commit and current HEAD
           CHANGES=$(git diff --name-only ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./wagtail_cms_portfolio2025)
           
