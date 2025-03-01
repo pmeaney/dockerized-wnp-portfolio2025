@@ -151,13 +151,13 @@ jobs:
             chmod 600 ~/.ssh/id_ed25519
             
             # Create SSH config with direct variable expansion
-            cat >>~/.ssh/config <<END
+            cat >>~/.ssh/config <<EOF
             Host prod
               HostName $SERVER_IP
               User $SSH_USER
               IdentityFile ~/.ssh/id_ed25519
               StrictHostKeyChecking no
-            END
+            EOF
             
             # Verify connection to server with simple commands
             echo "Verifying server connection..."

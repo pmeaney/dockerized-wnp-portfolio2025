@@ -16,7 +16,7 @@ To Do:
 - [ ] Now that I have some experience with Wagtail, begin using it for other projects.
 
 Potential future projects:
-- Test Wagtail CMS's its limits on a cheap server-- e.g. 1vcpu, 2gb ram.  And perhaps on a server one step up.  Get some experience with it and see how efficient (re: human time, LOC, building speed, cognitive requirements (i.e. learning curve & dev experience)) & performant (re: user experience & server metrics (especially speed) vs available resource consumption, compared to alternative CMS) it is to build REST API with.
+- Test Wagtail CMS's limits on a cheap server-- e.g. 1vcpu, 2gb ram.  And perhaps on a server one step up.  Get some experience with it and see how efficient (re: human time, LOC, building speed, cognitive requirements (i.e. learning curve & dev experience)) & performant (re: user experience & server metrics (especially speed) vs available resource consumption, compared to alternative CMS) it is to build REST API with.
 
 Try it out:
 
