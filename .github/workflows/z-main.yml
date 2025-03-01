@@ -81,7 +81,6 @@ jobs:
           CURRENT_COMMIT=$(git rev-parse HEAD)
           CURRENT_COMMIT_SHORT=$(git rev-parse --short HEAD)
           CURRENT_COMMIT_DATE=$(git show -s --format=%ci $CURRENT_COMMIT)
-          CURRENT_COMMIT_AUTHOR=$(git show -s --format=%an $CURRENT_COMMIT)
           CURRENT_COMMIT_MESSAGE=$(git show -s --format=%s $CURRENT_COMMIT)
           
           # Get CMS last deployed commit info if available
@@ -123,7 +122,6 @@ jobs:
           echo "| ------ | ----- |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | \`${CURRENT_COMMIT_SHORT}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Date** | ${CURRENT_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Author** | ${CURRENT_COMMIT_AUTHOR} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Message** | ${CURRENT_COMMIT_MESSAGE} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
