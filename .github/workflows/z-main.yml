@@ -144,18 +144,23 @@ jobs:
           echo "| **Last deployment date** | ${CMS_LAST_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Changes detected** | ${CMS_DEPLOYED_NOW} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Number of changes** | ${CMS_CHANGES_COUNT} files |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Action taken** | ${{ needs.cms.outputs.action_taken }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Action taken** | ${{ needs.cms.outputs.action }} |" >> $GITHUB_STEP_SUMMARY
           
-          # If changes were detected, show what changed
+          # If changes were detected, show what changed using the output from CMS workflow
           if [[ "${{ needs.cms.outputs.had_changes }}" == "true" ]]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 📝 CMS Changes" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            if [ -f "./deployment-markers/cms/last-cms-commit.txt" ]; then
-              git diff --name-status $CMS_LAST_COMMIT $CURRENT_COMMIT -- ./wagtail_cms_portfolio2025 >> $GITHUB_STEP_SUMMARY
+            if [[ -n "${{ needs.cms.outputs.changed_files }}" ]]; then
+              echo "${{ needs.cms.outputs.changed_files }}" >> $GITHUB_STEP_SUMMARY
             else
-              echo "First deployment - all files are new" >> $GITHUB_STEP_SUMMARY
+              # Fallback method if output is not available
+              if [ -f "./deployment-markers/cms/last-cms-commit.txt" ]; then
+                git diff --name-only $CMS_LAST_COMMIT $CURRENT_COMMIT -- ./wagtail_cms_portfolio2025 >> $GITHUB_STEP_SUMMARY
+              else
+                echo "First deployment - all files are new" >> $GITHUB_STEP_SUMMARY
+              fi
             fi
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi
@@ -170,18 +175,23 @@ jobs:
           echo "| **Last deployment date** | ${FE_LAST_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Changes detected** | ${FE_DEPLOYED_NOW} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Number of changes** | ${FE_CHANGES_COUNT} files |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Action taken** | ${{ needs.frontend.outputs.action_taken }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Action taken** | ${{ needs.frontend.outputs.action }} |" >> $GITHUB_STEP_SUMMARY
           
-          # If changes were detected, show what changed
+          # If changes were detected, show what changed using the output from Frontend workflow
           if [[ "${{ needs.frontend.outputs.had_changes }}" == "true" ]]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 📝 Frontend Changes" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            if [ -f "./deployment-markers/fe/last-fe-commit.txt" ]; then
-              git diff --name-status $FE_LAST_COMMIT $CURRENT_COMMIT -- ./nextjs_portfolio2025 >> $GITHUB_STEP_SUMMARY
+            if [[ -n "${{ needs.frontend.outputs.changed_files }}" ]]; then
+              echo "${{ needs.frontend.outputs.changed_files }}" >> $GITHUB_STEP_SUMMARY
             else
-              echo "First deployment - all files are new" >> $GITHUB_STEP_SUMMARY
+              # Fallback method if output is not available
+              if [ -f "./deployment-markers/fe/last-fe-commit.txt" ]; then
+                git diff --name-only $FE_LAST_COMMIT $CURRENT_COMMIT -- ./nextjs_portfolio2025 >> $GITHUB_STEP_SUMMARY
+              else
+                echo "First deployment - all files are new" >> $GITHUB_STEP_SUMMARY
+              fi
             fi
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi

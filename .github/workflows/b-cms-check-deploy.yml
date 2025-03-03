@@ -1,4 +1,4 @@
-name: CMS Check and Deploy Simulation
+name: CMS Check.  If changes detected, Deploy new image
 
 on:
   workflow_call:
@@ -18,6 +18,9 @@ on:
       action_taken:
         description: "Action taken during deployment"
         value: ${{ jobs.cms-deploy.outputs.action }}
+      changed_files:
+        description: "List of files that were changed"
+        value: ${{ jobs.cms-deploy.outputs.changed_files }}
 
 jobs:
   cms-deploy:
@@ -28,6 +31,7 @@ jobs:
     outputs:
       changes_detected: ${{ steps.check-changes.outputs.changes }}
       action: ${{ steps.deploy--cms.outputs.action_taken }}
+      changed_files: ${{ steps.changed-files.outputs.files }}
 
     steps:
       - uses: actions/checkout@v4
@@ -84,15 +88,12 @@ jobs:
           # Debug: Show the commit we're comparing against
           echo "Comparing current commit with: ${{ steps.get-last-commit.outputs.last_commit }}"
           
-          # List all files in the wagtail directory
-          echo "Files in wagtail directory:"
-          ls -la ./wagtail_cms_portfolio2025
-             
-          # Show raw git diff output
-          echo "Raw git diff output:"
-          git diff ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./wagtail_cms_portfolio2025
-          
+          # List files in wagtail directory without showing content
+          echo "Files in wagtail directory (names only):"
+          ls -la ./wagtail_cms_portfolio2025 | grep -v "^total"
+            
           # Check for changes between last deployed commit and current HEAD
+          # Only show file names, not content
           CHANGES=$(git diff --name-only ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./wagtail_cms_portfolio2025)
           
           if [ -z "$CHANGES" ]; then
@@ -100,9 +101,22 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
           else
             echo "Changes detected in wagtail_cms_portfolio2025 directory since last deployment:"
+            # Only show file names that changed, not their content
             echo "$CHANGES"
             echo "changes=true" >> $GITHUB_OUTPUT
+            
+            # Save changed files list to be accessed by the deployment summary
+            echo "$CHANGES" > ./cms-changed-files.txt
           fi
+
+      # Save changed files to an output instead of using artifacts
+      - name: Set changed files as output
+        if: steps.check-changes.outputs.changes == 'true'
+        id: changed-files
+        run: |
+          # Escape newlines and special characters for GitHub Actions outputs
+          CHANGED_FILES=$(cat ./cms-changed-files.txt | tr '\n' ' ' | sed 's/"/\\"/g')
+          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
 
       - name: Install YQ
         run: |

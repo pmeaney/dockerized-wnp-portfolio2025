@@ -1,4 +1,4 @@
-name: Frontend Check and Deploy Simulation
+name: Frontend Check.  If changes detected, Deploy new image
 
 on:
   workflow_call:
@@ -18,7 +18,9 @@ on:
       action_taken:
         description: "Action taken during deployment"
         value: ${{ jobs.fe-deploy.outputs.action }}
-
+      changed_files:
+        description: "List of files that were changed"
+        value: ${{ jobs.fe-deploy.outputs.changed_files }}
 jobs:
   fe-deploy:
     runs-on: ubuntu-latest
@@ -28,6 +30,7 @@ jobs:
     outputs:
       changes_detected: ${{ steps.check-changes.outputs.changes }}
       action: ${{ steps.deploy.outputs.action_taken }}
+      changed_files: ${{ steps.changed-files.outputs.files }}
 
     steps:
       - uses: actions/checkout@v4
@@ -83,6 +86,7 @@ jobs:
           echo "Comparing current commit with: ${{ steps.get-last-commit.outputs.last_commit }}"
           
           # Check for changes between last deployed commit and current HEAD
+          # Only show file names, not content
           CHANGES=$(git diff --name-only ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./nextjs_portfolio2025)
           
           if [ -z "$CHANGES" ]; then
@@ -90,9 +94,22 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
           else
             echo "Changes detected in nextjs_portfolio2025 directory since last deployment:"
+            # Only show file names that changed, not their content
             echo "$CHANGES"
             echo "changes=true" >> $GITHUB_OUTPUT
+            
+            # Save changed files list to be accessed by the deployment summary
+            echo "$CHANGES" > ./fe-changed-files.txt
           fi
+
+      # Save changed files to an output instead of using artifacts
+      - name: Set changed files as output
+        if: steps.check-changes.outputs.changes == 'true'
+        id: changed-files
+        run: |
+          # Escape newlines and special characters for GitHub Actions outputs
+          CHANGED_FILES=$(cat ./fe-changed-files.txt | tr '\n' ' ' | sed 's/"/\\"/g')
+          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
 
       - name: Install YQ
         run: |
