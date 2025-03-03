@@ -52,7 +52,7 @@ jobs:
           
           # Try to download the artifact using the GitHub CLI
           echo "Attempting to download latest fe-last-deployed-commit artifact..."
-          gh artifact download fe-last-deployed-commit --dir ./deployment-markers --repo ${{ github.repository }} || true
+          gh run download --name fe-last-deployed-commit --dir ./deployment-markers --repo ${{ github.repository }} || true
           
           # Check if the download was successful
           if [ -f "./deployment-markers/last-fe-commit.txt" ]; then

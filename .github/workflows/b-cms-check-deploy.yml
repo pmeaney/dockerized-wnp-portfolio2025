@@ -53,7 +53,7 @@ jobs:
           
           # Try to download the artifact using the GitHub CLI
           echo "Attempting to download latest cms-last-deployed-commit artifact..."
-          gh artifact download cms-last-deployed-commit --dir ./deployment-markers --repo ${{ github.repository }} || echo "⚠️ No previous deployment marker found or download failed"
+          gh run download --name cms-last-deployed-commit --dir ./deployment-markers --repo ${{ github.repository }} || echo "⚠️ No previous deployment marker found or download failed"
           
           # Check if the download was successful
           if [ -f "./deployment-markers/last-cms-commit.txt" ]; then
