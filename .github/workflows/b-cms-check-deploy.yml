@@ -49,14 +49,15 @@ jobs:
           
           # Try to download the artifact using the GitHub CLI
           echo "Attempting to download latest cms-last-deployed-commit artifact..."
-          gh run download --name cms-last-deployed-commit --dir ./deployment-markers --repo ${{ github.repository }} || true
-    
+          gh artifact download cms-last-deployed-commit --dir ./deployment-markers --repo ${{ github.repository }} || echo "⚠️ No previous deployment marker found or download failed"
           
           # Check if the download was successful
           if [ -f "./deployment-markers/last-cms-commit.txt" ]; then
             echo "✅ Successfully downloaded previous deployment marker"
           else
-            echo "⚠️ No previous deployment marker found or download failed"
+            # List available artifacts for debugging
+            echo "Available artifacts:"
+            gh artifact list --repo ${{ github.repository }} | grep -i cms || echo "No matching artifacts found"
           fi
 
       # Determine last deployed commit hash
@@ -86,7 +87,7 @@ jobs:
           # List all files in the wagtail directory
           echo "Files in wagtail directory:"
           ls -la ./wagtail_cms_portfolio2025
-          
+             
           # Show raw git diff output
           echo "Raw git diff output:"
           git diff ${{ steps.get-last-commit.outputs.last_commit }} HEAD -- ./wagtail_cms_portfolio2025
