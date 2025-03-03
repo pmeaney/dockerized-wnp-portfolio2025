@@ -14,23 +14,23 @@ on:
     outputs:
       had_changes:
         description: "Whether changes were detected"
-        value: ${{ jobs.cms-deploy.outputs.changes_detected }}
+        value: ${{ jobs.job-deploy--cms.outputs.changes_detected }}
       action_taken:
         description: "Action taken during deployment"
-        value: ${{ jobs.cms-deploy.outputs.action }}
+        value: ${{ jobs.job-deploy--cms.outputs.action }}
       changed_files:
         description: "List of files that were changed"
-        value: ${{ jobs.cms-deploy.outputs.changed_files }}
+        value: ${{ jobs.job-deploy--cms.outputs.changed_files }}
 
 jobs:
-  cms-deploy:
+  job-deploy--cms:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       actions: write  # Needed for artifact operations
     outputs:
       changes_detected: ${{ steps.check-changes.outputs.changes }}
-      action: ${{ steps.deploy--cms.outputs.action_taken }}
+      action: ${{ steps.step-deploy--cms.outputs.action_taken }}
       changed_files: ${{ steps.changed-files.outputs.files }}
 
     steps:
@@ -114,8 +114,8 @@ jobs:
         if: steps.check-changes.outputs.changes == 'true'
         id: changed-files
         run: |
-          # Escape newlines and special characters for GitHub Actions outputs
-          CHANGED_FILES=$(cat ./cms-changed-files.txt | tr '\n' ' ' | sed 's/"/\\"/g')
+          # Replace newlines with special marker that can be converted back in summary
+          CHANGED_FILES=$(cat ./cms-changed-files.txt | tr '\n' '###' | sed 's/"/\\"/g')
           echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
 
       - name: Install YQ
@@ -160,7 +160,7 @@ jobs:
           echo "build_status=success" >> $GITHUB_OUTPUT
 
       - name: SSH in and Deploy Updated CMS image
-        id: deploy--cms
+        id: step-deploy--cms
         env:
           SSH_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
           SSH_USER: ${{ secrets.LINUX_USER_DEVOPS }}
@@ -233,4 +233,4 @@ jobs:
         run: |
           echo "CMS Deployment Status:"
           echo "Changes Detected: ${{ steps.check-changes.outputs.changes }}"
-          echo "Action Taken: ${{ steps.deploy--cms.outputs.action_taken }}"
+          echo "Action Taken: ${{ steps.step-deploy--cms.outputs.action_taken }}"
