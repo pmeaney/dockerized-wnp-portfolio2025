@@ -2,8 +2,6 @@
 
 set -e
 
-python manage.py migrate
-
 # Check if required variables are set
 if [ -z "$DJANGO_SUPERUSER_USERNAME" ] || [ -z "$DJANGO_SUPERUSER_EMAIL" ] || [ -z "$DJANGO_SUPERUSER_PASSWORD" ]; then
     echo "Error: Superuser environment variables not set"
@@ -19,5 +17,7 @@ if not User.objects.filter(username='$DJANGO_SUPERUSER_USERNAME').exists():
                                 '$DJANGO_SUPERUSER_EMAIL', 
                                 '$DJANGO_SUPERUSER_PASSWORD')
 "
+
+python manage.py migrate
 
 python manage.py runserver 0.0.0.0:8000
