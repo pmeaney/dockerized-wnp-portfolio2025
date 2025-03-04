@@ -176,6 +176,7 @@ jobs:
           echo "SERVER_IP is set: $(if [ -n "$SERVER_IP" ]; then echo "YES"; else echo "NO"; fi)"
           echo "GHPAT is set: $(if [ -n "$GHPAT" ]; then echo "YES"; else echo "NO"; fi)"
           echo "WAGTAIL_ENV is set: $(if [ -n "$WAGTAIL_ENV" ]; then echo "YES"; else echo "NO"; fi)"
+          
 
           # Setup SSH - simplified approach
           mkdir -p ~/.ssh/
@@ -203,7 +204,7 @@ jobs:
             # Create a temporary env file on the remote server
             echo "Creating temporary environment file..."
             ssh prod "echo '$WAGTAIL_ENV' > /tmp/wagtail-env-file.env"
-            
+            ssh prod "head -n 1 /tmp/wagtail-env-file.env | cut -d= -f1"
             # Deploy using docker run with network connection and environment file
             ssh prod "docker pull ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest && \
                       docker rm -f wagtail-prod-wnp-portfolio-2025 || true && \
