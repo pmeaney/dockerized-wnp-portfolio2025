@@ -1,0 +1,7 @@
+###
+GET http://0.0.0.0:8000/api/v2/portfolio/
+Accept: application/json
+
+###
+GET http://0.0.0.0:8000/api/v2/portfolio/?fields=*
+Accept: application/json

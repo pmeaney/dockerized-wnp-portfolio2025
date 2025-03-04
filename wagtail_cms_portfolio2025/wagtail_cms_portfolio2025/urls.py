@@ -8,7 +8,15 @@ from wagtail.documents import urls as wagtaildocs_urls
 
 from search import views as search_views
 
+from portfolio.api import api_router
+from portfolio.endpoints import PortfolioAPIViewSet
+
+# Register the custom portfolio viewset
+api_router.register_endpoint('portfolio', PortfolioAPIViewSet)
+
+
 urlpatterns = [
+    path('api/v2/', api_router.urls),
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),

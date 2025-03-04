@@ -26,6 +26,7 @@ services:
       - ./wagtail_cms_portfolio2025:/app  # For live code reloading
       - ./wagtail_cms_portfolio2025/media:/app/media  # For persistent media uploads
       - ./wagtail_cms_portfolio2025/static:/app/static  # For static files
+    entrypoint: ["/app/entrypoint.dev.sh"]
     depends_on:
       - postgres-dev-wnp-portfolio-2025
     networks:
