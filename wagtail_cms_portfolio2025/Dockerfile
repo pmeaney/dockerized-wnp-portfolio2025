@@ -1,12 +1,6 @@
 # Use an official Python runtime based on Debian 12 "bookworm" as a parent image.
 FROM python:3.12-slim-bookworm
 
-
-# Copy the entrypoint script
-COPY entrypoint.sh /entrypoint
-# Make it executable
-RUN chmod +x /entrypoint
-
 # Add user that will be used in the container.
 RUN useradd wagtail
 
@@ -56,8 +50,8 @@ RUN chmod +x /entrypoint
 # Use user "wagtail" to run the build commands below and the server itself.
 USER wagtail
 
-# Collect static files.
-RUN python manage.py collectstatic --noinput --clear
+# Collect static files. -- moved to entrypoint file
+# RUN python manage.py collectstatic --noinput --clear
 
 # Runtime command that executes when "docker run" is called, it does the
 # following:

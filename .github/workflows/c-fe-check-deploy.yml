@@ -153,13 +153,14 @@ jobs:
           echo "PUSHED=true" >> $GITHUB_ENV
           echo "build_status=success" >> $GITHUB_OUTPUT
 
-      - name: Deploy
+      - name: SSH in and Deploy Updated Frontend image
         id: step-deploy--fe
         env:
           SSH_KEY: ${{ secrets.LINUX_SSH_PRIVATE_KEY }}
           SSH_USER: ${{ secrets.LINUX_USER_DEVOPS }}
           SERVER_IP: ${{ secrets.LINUX_SERVER_IP }}
           GHPAT: ${{ secrets.GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES }}
+          NEXTJS_ENV: ${{ secrets.NEXTJS__SECRET_ENV_FILE }}
         run: |
           if [[ "${{ steps.check-changes.outputs.changes }}" == "true" ]]; then
             # Setup SSH - simplified approach
@@ -182,14 +183,23 @@ jobs:
             echo "Authenticating with GitHub Container Registry on remote server..."
             ssh prod "echo '$GHPAT' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
             
-            # Deploy to remote server
+            # Create a temporary env file on the remote server
+            echo "Creating temporary environment file..."
+            ssh prod "echo '$NEXTJS_ENV' > /tmp/nextjs-env-file.env"
+            
+            # Deploy to remote server with environment file
             ssh prod "docker pull ghcr.io/pmeaney/nextjs-prod-wnp-portfolio-2025:latest && \
                       docker rm -f nextjs-prod-wnp-portfolio-2025 || true && \
                       docker run -d \
                         --name nextjs-prod-wnp-portfolio-2025 \
                         --network main-network--npm020325 \
                         -p 3000:3000 \
+                        --env-file /tmp/nextjs-env-file.env \
                         ghcr.io/pmeaney/nextjs-prod-wnp-portfolio-2025:latest"
+            
+            # Remove the temporary env file for security
+            echo "Removing temporary environment file..."
+            ssh prod "rm /tmp/nextjs-env-file.env"
             
             echo "Deploying new frontend version..."
             echo "action_taken=New version deployed" >> $GITHUB_OUTPUT

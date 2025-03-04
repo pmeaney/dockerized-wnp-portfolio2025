@@ -1,23 +1,24 @@
-#!/bin/bash
-
+#!/bin/bash 
 set -e
 
-# Check if required variables are set
-if [ -z "$DJANGO_SUPERUSER_USERNAME" ] || [ -z "$DJANGO_SUPERUSER_EMAIL" ] || [ -z "$DJANGO_SUPERUSER_PASSWORD" ]; then
-    echo "Error: Superuser environment variables not set"
-    exit 1
+# Apply database migrations
+echo "Applying database migrations..."
+python manage.py migrate --noinput
+
+# Create superuser if environment variables are set
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
+    echo "Creating superuser..."
+    python manage.py createsuperuser --noinput
+else
+    echo "Warning: Superuser environment variables not set"
+    echo "Continuing without creating a superuser"
+    echo "To create a superuser, set DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_EMAIL, and DJANGO_SUPERUSER_PASSWORD"
 fi
 
-# Create superuser if not exists
-python manage.py shell -c "
-from django.contrib.auth import get_user_model;
-User = get_user_model();
-if not User.objects.filter(username='$DJANGO_SUPERUSER_USERNAME').exists():
-    User.objects.create_superuser('$DJANGO_SUPERUSER_USERNAME', 
-                                '$DJANGO_SUPERUSER_EMAIL', 
-                                '$DJANGO_SUPERUSER_PASSWORD')
-"
+# Collect static files if not already done
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --clear
 
-python manage.py migrate
-
-python manage.py runserver 0.0.0.0:8000
+# Run gunicorn for production
+echo "Starting Gunicorn server..."
+exec gunicorn wagtail_cms_portfolio2025.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout=120
