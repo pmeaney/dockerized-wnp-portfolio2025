@@ -204,6 +204,10 @@ jobs:
             # Create a temporary env file on the remote server
             echo "Creating temporary environment file..."
             ssh prod "echo '$WAGTAIL_ENV' > ~/wagtail-env-file.env"
+            ssh prod "ls -la ~/wagtail-env-file.env" # Check if file exists and permissions
+            ssh prod "wc -l ~/wagtail-env-file.env" # Count number of lines
+            ssh prod "head -n 1 ~/wagtail-env-file.env | cut -d= -f1" # Show first variable name
+
             # Deploy using docker run with network connection and environment file
             ssh prod "docker pull ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest && \
                       docker rm -f wagtail-prod-wnp-portfolio-2025 || true && \
