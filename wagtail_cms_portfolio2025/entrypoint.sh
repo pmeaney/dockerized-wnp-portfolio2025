@@ -12,9 +12,6 @@ echo "DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL"
 echo "DJANGO_SUPERUSER_PASSWORD: [REDACTED]"
 echo "========================================"
 
-
-export DJANGO_SETTINGS_MODULE=wagtail_cms_portfolio2025.settings.production
-
 # Apply database migrations
 echo "Applying database migrations..."
 python manage.py migrate
