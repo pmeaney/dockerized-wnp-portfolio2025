@@ -31,6 +31,6 @@ else:
 
 # Start the Wagtail server
 echo "Starting Wagtail server..."
-exec gunicorn mysite.wsgi:application --bind 0.0.0.0:8000
+exec gunicorn wagtail_cms_portfolio2025.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout=120
 # OR if using runserver instead:
 # exec python manage.py runserver 0.0.0.0:8000
