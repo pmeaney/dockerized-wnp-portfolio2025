@@ -30,3 +30,42 @@ Each GitHub Actions step runs in a fresh environment, so SSH configurations don'
 In GitHub Actions, each "step" in your workflow is essentially its own execution context. When a step completes, any changes it made to the environment (like creating SSH configurations) don't automatically carry over to subsequent steps.
 
 Therefore, for each step requiring ssh access to the server, that step must be configured to setup its ssh config prior to its ability to ssh in and run commands.
+
+# Regarding Workflow calls
+
+### Passing environment secrets files from one workflow to another
+
+the main.yml file calls the FrontEnd Deploy file.
+In order to access the github actions secrets for 'production' environment,
+it must pass `with:   environment: production`, and the file it calls must receive the environment string in its section `inputs:   environment:  required: true ... `, as shown in the following two file snippets: 
+
+main.yml
+
+```yml
+name: Main Deployment Pipeline
+on:
+  push:
+    branches: [main]
+jobs:
+  # Deploy frontend if needed
+  frontend:
+    needs: cms
+    uses: ./.github/workflows/frontend-deploy.yml
+    with:
+      environment: production
+```
+
+
+frontend-deploy.yml
+
+```yml
+name: Frontend Check.  If changes detected, Deploy new image
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "The deployment environment to use"
+```
