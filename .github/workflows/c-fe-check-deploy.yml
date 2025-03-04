@@ -187,7 +187,7 @@ jobs:
             
             # Create a temporary env file on the remote server
             echo "Creating temporary environment file..."
-            ssh prod "echo '$NEXTJS_ENV' > /tmp/nextjs-env-file.env"
+            ssh prod "echo '$NEXTJS_ENV' > ~/nextjs-env-file.env"
             
             # Deploy to remote server with environment file
             ssh prod "docker pull ghcr.io/pmeaney/nextjs-prod-wnp-portfolio-2025:latest && \
@@ -196,12 +196,12 @@ jobs:
                         --name nextjs-prod-wnp-portfolio-2025 \
                         --network main-network--npm020325 \
                         -p 3000:3000 \
-                        --env-file /tmp/nextjs-env-file.env \
+                        --env-file ~/nextjs-env-file.env \
                         ghcr.io/pmeaney/nextjs-prod-wnp-portfolio-2025:latest"
             
             # Remove the temporary env file for security
             echo "Removing temporary environment file..."
-            ssh prod "rm /tmp/nextjs-env-file.env"
+            ssh prod "rm ~/nextjs-env-file.env"
             
             echo "Deploying new frontend version..."
             echo "action_taken=New version deployed" >> $GITHUB_OUTPUT

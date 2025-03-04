@@ -203,20 +203,19 @@ jobs:
             
             # Create a temporary env file on the remote server
             echo "Creating temporary environment file..."
-            ssh prod "echo '$WAGTAIL_ENV' > /tmp/wagtail-env-file.env"
-            ssh prod "cat /tmp/wagtail-env-file.env"
+            ssh prod "echo '$WAGTAIL_ENV' > ~/wagtail-env-file.env"
             # Deploy using docker run with network connection and environment file
             ssh prod "docker pull ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest && \
                       docker rm -f wagtail-prod-wnp-portfolio-2025 || true && \
                       docker run -d \
                         --name wagtail-prod-wnp-portfolio-2025 \
                         --network main-network--npm020325 \
-                        --env-file /tmp/wagtail-env-file.env \
+                        --env-file ~/wagtail-env-file.env \
                         ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest"
             
             # Remove the temporary env file for security
             echo "Removing temporary environment file..."
-            ssh prod "rm /tmp/wagtail-env-file.env"
+            ssh prod "rm ~/wagtail-env-file.env"
             
             echo "Deploying new CMS version..."
             echo "action_taken=New version deployed" >> $GITHUB_OUTPUT
