@@ -1,7 +1,7 @@
-#!/bin/bash 
+#!/bin/bash
 set -e
 
-# Debug: Show all environment variables
+# Print environment variables for debugging (redact sensitive info)
 echo "==== DEBUGGING: Environment Variables ===="
 echo "SQL_ENGINE: $SQL_ENGINE"
 echo "SQL_DATABASE: $SQL_DATABASE"
@@ -14,24 +14,23 @@ echo "========================================"
 
 # Apply database migrations
 echo "Applying database migrations..."
-python manage.py migrate --noinput
+python manage.py migrate
 
-# Create superuser if environment variables are set
-if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
-    echo "Creating superuser..."
-    python manage.py createsuperuser --noinput
-else
-    echo "Warning: Superuser environment variables not set"
-    echo "Continuing without creating a superuser"
-    echo "To create a superuser, set DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_EMAIL, and DJANGO_SUPERUSER_PASSWORD"
-fi
+# Create superuser only if it doesn't exist
+echo "Checking superuser status..."
+python manage.py shell -c "
+from django.contrib.auth import get_user_model;
+User = get_user_model();
+if not User.objects.filter(username='$DJANGO_SUPERUSER_USERNAME').exists():
+    print('Creating superuser...');
+    User.objects.create_superuser('$DJANGO_SUPERUSER_USERNAME', '$DJANGO_SUPERUSER_EMAIL', '$DJANGO_SUPERUSER_PASSWORD');
+    print('Superuser created successfully');
+else:
+    print('Superuser already exists, skipping creation');
+"
 
-# Collect static files if not already done
-echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear
-
-# Run gunicorn for production
-# echo "Starting Gunicorn server..."
-# exec gunicorn wagtail_cms_portfolio2025.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout=120
-
-exec python manage.py runserver 0.0.0.0:8000
+# Start the Wagtail server
+echo "Starting Wagtail server..."
+exec gunicorn mysite.wsgi:application --bind 0.0.0.0:8000
+# OR if using runserver instead:
+# exec python manage.py runserver 0.0.0.0:8000
