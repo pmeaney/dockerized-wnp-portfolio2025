@@ -30,3 +30,4 @@ wagtail_defaults: |
   DJANGO_SUPERUSER_USERNAME=testuser
   DJANGO_SUPERUSER_EMAIL=patrick.wm.meaney@gmail.com
   DJANGO_SUPERUSER_PASSWORD=testpw
+  DJANGO_SETTINGS_MODULE=wagtail_cms_portfolio2025.settings.production
