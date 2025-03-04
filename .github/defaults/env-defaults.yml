@@ -26,6 +26,7 @@ wagtail_defaults: |
   SQL_PASSWORD=wagtail_blog
   SQL_HOST=postgres-prod-wnp-portfolio-2025
   SQL_PORT=5432
+  DJANGO_SECRET_KEY=addSomeSecretKeyHere
   DJANGO_SUPERUSER_USERNAME=testuser
   DJANGO_SUPERUSER_EMAIL=patrick.wm.meaney@gmail.com
   DJANGO_SUPERUSER_PASSWORD=testpw
