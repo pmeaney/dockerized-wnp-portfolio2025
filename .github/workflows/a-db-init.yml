@@ -2,6 +2,11 @@ name: Database Check and Init Simulation
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "The deployment environment to use"
     secrets:
       LINUX_SSH_PRIVATE_KEY:
         required: true
