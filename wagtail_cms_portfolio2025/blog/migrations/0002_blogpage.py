@@ -4,7 +4,7 @@ import django.db.models.deletion
 import wagtail.fields
 from django.db import migrations, models
 
-# test 123
+# test
 
 class Migration(migrations.Migration):
 
