@@ -11,6 +11,8 @@ on:
         required: true
       GHPAT_021425_CICD_GHCR_REPO_WORKFLOW_WRDPACKAGES:
         required: true
+      NEXTJS__SECRET_ENV_FILE:
+        required: true
     outputs:
       had_changes:
         description: "Whether changes were detected"

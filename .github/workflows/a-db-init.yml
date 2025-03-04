@@ -9,6 +9,8 @@ on:
         required: true
       LINUX_SERVER_IP:
         required: true
+      # POSTGRES__SECRET_ENV_FILE:
+      #   required: true
     outputs:
       needs_depl__db:
         description: "Whether DB needs deployment"
