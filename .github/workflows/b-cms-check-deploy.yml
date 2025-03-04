@@ -226,6 +226,7 @@ jobs:
               docker run -d \
                 --name wagtail-prod-wnp-portfolio-2025 \
                 --network main-network--npm020325 \
+                -p 8000:8000 \
                 --env-file ~/wagtail-env-file.env \
                 ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest"
             
