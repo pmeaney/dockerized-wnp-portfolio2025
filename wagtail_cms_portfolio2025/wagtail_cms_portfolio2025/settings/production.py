@@ -1,8 +1,16 @@
+import os
+
 from .base import *
 
-DEBUG = False
 
-SECRET_KEY = "django-insecure-h3+7&(bxg0y0%-61gre3wb$khtusvqp*bb1w74r0cf1coa=mb6"
+# Get the secret key from environment variable, with a fallback for safety
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fallback-secret-key-only-for-development')
+
+# In production, you want to ensure it's set and raise an error if it's not
+if not SECRET_KEY or SECRET_KEY == 'fallback-secret-key-only-for-development':
+    raise ValueError("DJANGO_SECRET_KEY environment variable must be set in production!")
+
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'cms.livestauction.com', 
