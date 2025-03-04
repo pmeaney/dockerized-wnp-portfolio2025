@@ -152,7 +152,14 @@ jobs:
           echo "| **Last deployed commit** | \`${CMS_LAST_COMMIT_SHORT}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Last deployment date** | ${CMS_LAST_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Changes detected** | ${CMS_DEPLOYED_NOW} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Number of changes** | ${{ needs.cms.outputs.changed_files_count }} files |" >> $GITHUB_STEP_SUMMARY
+          
+          # Use fallback count if the output count is missing
+          if [[ "${{ needs.cms.outputs.had_changes }}" == "true" && -n "${{ needs.cms.outputs.changed_files_count }}" ]]; then
+            echo "| **Number of changes** | ${{ needs.cms.outputs.changed_files_count }} files |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| **Number of changes** | ${CMS_CHANGES_COUNT} files |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "| **Action taken** | ${{ needs.cms.outputs.action }} |" >> $GITHUB_STEP_SUMMARY
           
           # If changes were detected, show what changed using the output from CMS workflow
@@ -183,7 +190,14 @@ jobs:
           echo "| **Last deployed commit** | \`${FE_LAST_COMMIT_SHORT}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Last deployment date** | ${FE_LAST_COMMIT_DATE} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Changes detected** | ${FE_DEPLOYED_NOW} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Number of changes** | ${{ needs.frontend.outputs.changed_files_count }} files |" >> $GITHUB_STEP_SUMMARY
+          
+          # Use fallback count if the output count is missing
+          if [[ "${{ needs.frontend.outputs.had_changes }}" == "true" && -n "${{ needs.frontend.outputs.changed_files_count }}" ]]; then
+            echo "| **Number of changes** | ${{ needs.frontend.outputs.changed_files_count }} files |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| **Number of changes** | ${FE_CHANGES_COUNT} files |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "| **Action taken** | ${{ needs.frontend.outputs.action }} |" >> $GITHUB_STEP_SUMMARY
           
           # If changes were detected, show what changed using the output from Frontend workflow

@@ -28,7 +28,9 @@ on:
       changed_files:
         description: "List of files that were changed"
         value: ${{ jobs.job-deploy--cms.outputs.changed_files }}
-
+      changed_files_count:
+        description: "Number of files that were changed"
+        value: ${{ jobs.job-deploy--cms.outputs.changed_files_count }}
 jobs:
   job-deploy--cms:
     environment: production
