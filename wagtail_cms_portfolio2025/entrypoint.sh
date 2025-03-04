@@ -31,5 +31,7 @@ echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
 # Run gunicorn for production
-echo "Starting Gunicorn server..."
-exec gunicorn wagtail_cms_portfolio2025.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout=120
+# echo "Starting Gunicorn server..."
+# exec gunicorn wagtail_cms_portfolio2025.wsgi:application --bind 0.0.0.0:8000 --workers=4 --timeout=120
+
+exec python manage.py runserver 0.0.0.0:8000
