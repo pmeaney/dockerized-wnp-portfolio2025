@@ -13,6 +13,8 @@ jobs:
   # First, check database status/initialize if needed
   database:
     uses: ./.github/workflows/a-db-init.yml
+    with:
+      environment: production
     permissions:
       contents: read
     secrets:
@@ -25,6 +27,8 @@ jobs:
   cms:
     needs: database
     uses: ./.github/workflows/b-cms-check-deploy.yml
+    with:
+      environment: production
     permissions:
       contents: read
       actions: write  # Explicitly grant artifact permissions
@@ -39,6 +43,8 @@ jobs:
   frontend:
     needs: cms
     uses: ./.github/workflows/c-fe-check-deploy.yml
+    with:
+      environment: production
     permissions:
       contents: read
       actions: write  # Explicitly grant artifact permissions
