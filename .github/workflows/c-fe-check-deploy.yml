@@ -25,6 +25,7 @@ on:
         value: ${{ jobs.job-deploy--fe.outputs.changed_files }}
 jobs:
   job-deploy--fe:
+    environment: production
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -26,6 +26,7 @@ on:
 
 jobs:
   job-deploy--cms:
+    environment: production
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -206,25 +207,33 @@ jobs:
             ssh prod "echo '$WAGTAIL_ENV' > ~/wagtail-env-file.env"
             ssh prod "ls -la ~/wagtail-env-file.env" # Check if file exists and permissions
             ssh prod "wc -l ~/wagtail-env-file.env" # Count number of lines
-            ssh prod "head -n 1 ~/wagtail-env-file.env | cut -d= -f1" # Show first variable name
 
-            # Deploy using docker run with network connection and environment file
+            ##############
+            # Deploy using docker run with environment file
+            ssh prod "docker pull ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest && \
+              docker rm -f wagtail-prod-wnp-portfolio-2025 || true && \
+              docker run -d \
+                --name wagtail-prod-wnp-portfolio-2025 \
+                --network main-network--npm020325 \
+                --env-file ~/wagtail-env-file.env \
+                ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest"
+
             # Deploy using docker run with individual environment variables
             ssh prod "docker pull ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest && \
             docker rm -f wagtail-prod-wnp-portfolio-2025 || true && \
-            docker run -d \
-              --name wagtail-prod-wnp-portfolio-2025 \
-              --network main-network--npm020325 \
-              -e SQL_ENGINE=django.db.backends.postgresql \
-              -e SQL_DATABASE=wagtail_blog \
-              -e SQL_USER=wagtail_blog \
-              -e SQL_PASSWORD=wagtail_blog \
-              -e SQL_HOST=postgres-prod-wnp-portfolio-2025 \
-              -e SQL_PORT=5432 \
-              -e DJANGO_SUPERUSER_USERNAME=testuser \
-              -e DJANGO_SUPERUSER_EMAIL=patrick.wm.meaney@gmail.com \
-              -e DJANGO_SUPERUSER_PASSWORD=testpw \
-              ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest"
+            # docker run -d \
+            #   --name wagtail-prod-wnp-portfolio-2025 \
+            #   --network main-network--npm020325 \
+            #   -e SQL_ENGINE=django.db.backends.postgresql \
+            #   -e SQL_DATABASE=wagtail_blog \
+            #   -e SQL_USER=wagtail_blog \
+            #   -e SQL_PASSWORD=wagtail_blog \
+            #   -e SQL_HOST=postgres-prod-wnp-portfolio-2025 \
+            #   -e SQL_PORT=5432 \
+            #   -e DJANGO_SUPERUSER_USERNAME=testuser \
+            #   -e DJANGO_SUPERUSER_EMAIL=patrick.wm.meaney@gmail.com \
+            #   -e DJANGO_SUPERUSER_PASSWORD=testpw \
+            #   ghcr.io/pmeaney/wagtail-prod-wnp-portfolio-2025:latest"
             
             # Remove the temporary env file for security
             echo "Removing temporary environment file..."

@@ -16,13 +16,6 @@ echo "========================================"
 echo "Applying database migrations..."
 python manage.py migrate --noinput
 
-# Source environment variables from .env file if it exists
-# Leaving it for reference...
-if [ -f ".env-wagtail-prod.env" ]; then
-  echo "Loading environment variables from .env-wagtail-prod.env"
-  export $(grep -v '^#' .env-wagtail-prod.env | xargs)
-fi
-
 # Create superuser if environment variables are set
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
     echo "Creating superuser..."

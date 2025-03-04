@@ -18,6 +18,7 @@ on:
 
 jobs:
   check-db:
+    environment: production
     runs-on: ubuntu-latest
     outputs:
       needs_depl__db: ${{ steps.check-depl-needed--db.outputs.needs_depl__db }}
