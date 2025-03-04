@@ -8,7 +8,7 @@ export default function PortfolioGrid() {
             <header className="card-header">
               <p className="card-header-title">
                 <span>
-                  Admin <small>(Light)</small>
+                  Admin123 <small>(Light)</small>
                 </span>
                 <span className="is-pulled-right">
                   <a href="https:github.com/jgthms/bulma/releases/tag/0.7.2">

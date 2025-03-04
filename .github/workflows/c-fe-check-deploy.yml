@@ -30,7 +30,7 @@ on:
         value: ${{ jobs.job-deploy--fe.outputs.changed_files }}
       changed_files_count:
         description: "Number of files that were changed"
-        value: ${{ jobs.job-deploy--cms.outputs.changed_files_count }}
+        value: ${{ jobs.job-deploy--fe.outputs.changed_files_count }}
 jobs:
   job-deploy--fe:
     environment: production
