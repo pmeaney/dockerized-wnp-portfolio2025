@@ -19,7 +19,7 @@ services:
     build:
       context: ./wagtail_cms_portfolio2025
     env_file:
-      - ./wagtail_cms_portfolio2025/.env-wagtail.env
+      - ./wagtail_cms_portfolio2025/.env-wagtail-example.env
     ports:
       - "8000:8000"
     volumes:
