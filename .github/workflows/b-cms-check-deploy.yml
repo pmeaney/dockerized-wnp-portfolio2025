@@ -40,6 +40,7 @@ jobs:
       changes_detected: ${{ steps.check-changes.outputs.changes }}
       action: ${{ steps.step-deploy--cms.outputs.action_taken }}
       changed_files: ${{ steps.changed-files.outputs.files }}
+      changed_files_count: ${{ steps.changed-files.outputs.count }}
 
     steps:
       - uses: actions/checkout@v4
@@ -122,9 +123,14 @@ jobs:
         if: steps.check-changes.outputs.changes == 'true'
         id: changed-files
         run: |
-          # Replace newlines with special marker that can be converted back in summary
-          CHANGED_FILES=$(cat ./cms-changed-files.txt | tr '\n' '###' | sed 's/"/\\"/g')
-          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          # Use GitHub's multiline output syntax
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          cat ./cms-changed-files.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Count the number of changed files correctly
+          CHANGE_COUNT=$(cat ./cms-changed-files.txt | wc -l | xargs)
+          echo "count=$CHANGE_COUNT" >> $GITHUB_OUTPUT
 
       - name: Install YQ
         run: |

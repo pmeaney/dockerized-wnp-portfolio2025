@@ -4,6 +4,8 @@ from wagtail.models import Page
 from wagtail.fields import RichTextField
 from wagtail.search import index
 
+# test
+
 class BlogIndexPage(Page):
     intro = RichTextField(blank=True)
 
