@@ -1,12 +1,12 @@
 from wagtail.api.v2.views import PagesAPIViewSet
 from wagtail.api.v2.serializers import PageSerializer
 from rest_framework import serializers
-from .models import PortfolioItem
+from .models import PortfolioItemPage
 
 # Custom API endpoint for portfolio items
 class PortfolioAPIViewSet(PagesAPIViewSet):
-    # Only serve PortfolioItem pages
-    model = PortfolioItem
+    # Only serve PortfolioItemPage pages
+    model = PortfolioItemPage
 
     # Add custom fields
     def get_serializer_context(self):
@@ -21,17 +21,18 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
 
     # Custom meta fields
     meta_fields = PagesAPIViewSet.meta_fields + [
-        'date',
-        'intro',
+        # Update these fields to match your model
+        # If you don't have 'date' and 'intro' fields in your new model,
+        # you should remove them or replace them with fields that exist
+        'description',  # Changed from 'intro'
     ]
 
     # Custom fields to add to the API response
     body_fields = PagesAPIViewSet.body_fields + [
-        'thumbnail',
-        'main_button_left_text',
-        'main_button_left_url',
-        'secondary_button_right_text',
-        'secondary_button_right_url',
+        'featured_image',  # Changed from 'thumbnail'
+        'main_button_text',  # Changed from 'main_button_left_text'
+        'secondary_button_text',  # Changed from 'secondary_button_right_text'
+        'secondary_button_url',  # Changed from 'secondary_button_right_url'
     ]
 
     # Add portfolio tags to the API response
@@ -48,14 +49,14 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
         
     def get_tags(self, obj):
         tags = []
-        for portfolio_tag in obj.portfolio_tags.all():
-            tag_obj = portfolio_tag.tag
-            tag_type = tag_obj.tag_type
+        for tag in obj.tags.all():
+            tag_type = tag.tag_type
             type_name = tag_type.name if tag_type else 'default'
             
             tags.append({
-                'tagValue': tag_obj.name,
-                'tagType': type_name
+                'tagValue': tag.name,
+                'tagType': type_name,
+                'tagCategory': tag_type.category_type if tag_type else 'default'  # Added this field
             })
             
         return tags
