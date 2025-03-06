@@ -1,7 +1,5 @@
 from django.db import models
 from modelcluster.fields import ParentalKey
-from modelcluster.contrib.taggit import ClusterTaggableManager
-from taggit.models import TaggedItemBase
 
 from wagtail.models import Page, Orderable
 from wagtail.fields import RichTextField
@@ -9,15 +7,6 @@ from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.images.models import Image
 from wagtail.images.models import Image
 from wagtail.snippets.models import register_snippet
-
-
-# Portfolio Tag
-class PortfolioItemTag(TaggedItemBase):
-    content_object = ParentalKey(
-        'PortfolioItem',
-        related_name='tagged_items',
-        on_delete=models.CASCADE
-    )
 
 
 @register_snippet
@@ -131,9 +120,6 @@ class PortfolioItem(Page):
     secondary_button_right_text = models.CharField(max_length=50, blank=True)
     secondary_button_right_url = models.URLField(blank=True)
     
-    # Tags field
-    tags = ClusterTaggableManager(through=PortfolioItemTag, blank=True)
-    
     # Only allow this page to be created under PortfolioIndexPage
     parent_page_types = ['portfolio.PortfolioIndexPage']
     
@@ -143,7 +129,6 @@ class PortfolioItem(Page):
     content_panels = Page.content_panels + [
         MultiFieldPanel([
             FieldPanel('date'),
-            FieldPanel('tags'),
             FieldPanel('thumbnail'),
         ], heading="Portfolio Item Metadata"),
         FieldPanel('intro'),

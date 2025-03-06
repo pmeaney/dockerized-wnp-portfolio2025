@@ -48,24 +48,14 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
         
     def get_tags(self, obj):
         tags = []
-        # Add regular tags
-        for tag in obj.tags.all():
-            tags.append({
-                'name': tag.name,
-                'style': 'is-default',
-                'url': None
-            })
-        
-        # Add portfolio-specific tags with styles
         for portfolio_tag in obj.portfolio_tags.all():
             tag_obj = portfolio_tag.tag
             tag_type = tag_obj.tag_type
-            style = tag_type.style if tag_type else 'is-default'
+            type_name = tag_type.name if tag_type else 'default'
             
             tags.append({
-                'name': tag_obj.name,
-                'style': style, 
-                'url': None
+                'tagValue': tag_obj.name,
+                'tagType': type_name
             })
             
         return tags
