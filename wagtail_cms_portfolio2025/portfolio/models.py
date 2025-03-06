@@ -4,18 +4,20 @@ from wagtail.models import Page
 from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from wagtail.snippets.models import register_snippet
+from modelcluster.fields import ParentalKey
+from modelcluster.models import ClusterableModel
 
 # =========== Tag Models ===========
 
 @register_snippet
-class TagType(models.Model):
+class TagCategory(models.Model):
     """
-    Model representing categories for portfolio tags.
+    Model for tag categories in the portfolio system.
+    Each tag will belong to one of these predefined categories.
     """
-    name = models.CharField(max_length=255, help_text="Name of the tag type")
-    slug = models.SlugField(unique=True, max_length=255, help_text="Unique identifier used in URLs")
+    name = models.CharField(max_length=100, help_text="Display name for this tag category")
     
-    # Predefined categories to choose from
+    # Predefined categories
     CATEGORY_CHOICES = [
         ('year', 'Year'),
         ('language', 'Programming Language'),
@@ -29,12 +31,11 @@ class TagType(models.Model):
         max_length=50, 
         choices=CATEGORY_CHOICES,
         default='default',
-        help_text="The type of category this represents"
+        help_text="The category this tag represents"
     )
     
     panels = [
         FieldPanel('name'),
-        FieldPanel('slug'),
         FieldPanel('category_type'),
     ]
     
@@ -42,53 +43,54 @@ class TagType(models.Model):
         return self.name
     
     class Meta:
-        verbose_name = "Tag Type"
-        verbose_name_plural = "Tag Types"
-        ordering = ['name']
+        verbose_name = "Tag Category"
+        verbose_name_plural = "Tag Categories"
 
 
 @register_snippet
 class PortfolioTag(models.Model):
     """
-    Model representing tags that can be applied to portfolio items.
-    Each tag belongs to a specific tag type.
+    Tags that can be applied to portfolio items.
+    Each tag belongs to a specific category.
     """
-    name = models.CharField(max_length=255, help_text="Name of the tag")
-    slug = models.SlugField(unique=True, max_length=255, help_text="Unique identifier used in URLs")
+    name = models.CharField(max_length=255, help_text="The tag name/value")
     
-    # Link to the tag type
-    tag_type = models.ForeignKey(
-        'TagType',
-        on_delete=models.CASCADE,
+    # Link to the tag category
+    category = models.ForeignKey(
+        'TagCategory',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         related_name='tags',
-        help_text="The tag type this tag belongs to"
+        help_text="The category this tag belongs to"
     )
     
     panels = [
         FieldPanel('name'),
-        FieldPanel('slug'),
-        FieldPanel('tag_type'),
+        FieldPanel('category'),
     ]
     
     def __str__(self):
-        return f"{self.name} ({self.tag_type.name})"
+        category_type = self.category.category_type if self.category else "default"
+        return f"{self.name} ({category_type})"
     
     class Meta:
         verbose_name = "Portfolio Tag"
         verbose_name_plural = "Portfolio Tags"
-        ordering = ['tag_type', 'name']
 
 
-# =========== Page Models ===========
+# =========== Portfolio Item Model ===========
 
-class PortfolioItemPage(Page):
+class PortfolioItem(Page):
     """
     Individual portfolio project page with updated button fields.
     """
-    description = RichTextField(blank=True)
+    date = models.DateField("Post date")
+    intro = models.CharField(max_length=250)
+    body = RichTextField(blank=True)
     
-    # Featured image
-    featured_image = models.ForeignKey(
+    # Featured image (thumbnail)
+    thumbnail = models.ForeignKey(
         'wagtailimages.Image',
         null=True,
         blank=True,
@@ -96,14 +98,13 @@ class PortfolioItemPage(Page):
         related_name='+'
     )
     
-    # Updated button fields
+    # Button fields
     main_button_text = models.CharField(
         max_length=50,
         blank=False,  # Making it required
         help_text="Text for the main call-to-action button"
     )
     
-    # Secondary button fields with renamed names
     secondary_button_text = models.CharField(
         max_length=50,
         blank=True,
@@ -115,16 +116,19 @@ class PortfolioItemPage(Page):
         help_text="URL for the secondary button"
     )
     
-    # Tags field to connect with portfolio tags
+    # Tags - using ParentalManyToManyField to simplify the relationship
     tags = models.ManyToManyField(
         'PortfolioTag',
         blank=True,
-        related_name='portfolio_pages'
+        through='PortfolioTagItem',
+        related_name='portfolio_items'
     )
     
     content_panels = Page.content_panels + [
-        FieldPanel('description'),
-        FieldPanel('featured_image'),
+        FieldPanel('date'),
+        FieldPanel('intro'),
+        FieldPanel('body'),
+        FieldPanel('thumbnail'),
         MultiFieldPanel([
             FieldPanel('main_button_text'),
             FieldPanel('secondary_button_text'),
@@ -133,16 +137,67 @@ class PortfolioItemPage(Page):
         FieldPanel('tags', widget=forms.CheckboxSelectMultiple),
     ]
     
+    # This restricts where this page type can be created
+    parent_page_types = ['portfolio.PortfolioIndexPage']
+    
+    # This prevents any page types from being created beneath portfolio items
+    subpage_types = []
+
     def get_main_button_url(self):
         """Returns the page slug to use as the main button URL"""
         return self.slug
     
-    def get_context(self, request):
-        context = super().get_context(request)
-        # Add the main button URL to the context
-        context['main_button_url'] = self.get_main_button_url()
-        return context
-    
     class Meta:
         verbose_name = "Portfolio Item"
         verbose_name_plural = "Portfolio Items"
+
+
+class PortfolioTagItem(models.Model):
+    """
+    The through model for linking tags to portfolio items.
+    """
+    tag = models.ForeignKey(
+        'PortfolioTag',
+        on_delete=models.CASCADE,
+        related_name='+'
+    )
+    
+    portfolio_item = ParentalKey(
+        'PortfolioItem',
+        on_delete=models.CASCADE,
+        related_name='portfolio_tags'
+    )
+    
+    panels = [
+        FieldPanel('tag'),
+    ]
+    
+    class Meta:
+        unique_together = ('tag', 'portfolio_item')
+
+
+# =========== Portfolio Index Page ===========
+
+class PortfolioIndexPage(Page):
+    """
+    Index page for listing portfolio items.
+    """
+    intro = RichTextField(blank=True)
+    
+    content_panels = Page.content_panels + [
+        FieldPanel('intro')
+    ]
+
+    # This restricts what page types can be created beneath this index page
+    subpage_types = ['portfolio.PortfolioItem']
+    
+    
+    
+    class Meta:
+        verbose_name = "Portfolio Index Page"
+        verbose_name_plural = "Portfolio Index Pages"
+    
+    def get_context(self, request):
+        context = super().get_context(request)
+        context['portfolio_items'] = PortfolioItem.objects.child_of(self).live().order_by('-date')
+        return context

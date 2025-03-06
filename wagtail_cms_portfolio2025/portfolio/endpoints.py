@@ -1,12 +1,12 @@
 from wagtail.api.v2.views import PagesAPIViewSet
 from wagtail.api.v2.serializers import PageSerializer
 from rest_framework import serializers
-from .models import PortfolioItemPage
+from .models import PortfolioItem
 
 # Custom API endpoint for portfolio items
 class PortfolioAPIViewSet(PagesAPIViewSet):
-    # Only serve PortfolioItemPage pages
-    model = PortfolioItemPage
+    # Only serve PortfolioItem pages
+    model = PortfolioItem
 
     # Add custom fields
     def get_serializer_context(self):
@@ -21,18 +21,17 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
 
     # Custom meta fields
     meta_fields = PagesAPIViewSet.meta_fields + [
-        # Update these fields to match your model
-        # If you don't have 'date' and 'intro' fields in your new model,
-        # you should remove them or replace them with fields that exist
-        'description',  # Changed from 'intro'
+        'date',
+        'intro',
     ]
 
     # Custom fields to add to the API response
     body_fields = PagesAPIViewSet.body_fields + [
-        'featured_image',  # Changed from 'thumbnail'
-        'main_button_text',  # Changed from 'main_button_left_text'
-        'secondary_button_text',  # Changed from 'secondary_button_right_text'
-        'secondary_button_url',  # Changed from 'secondary_button_right_url'
+        'body',
+        'thumbnail',
+        'main_button_text',
+        'secondary_button_text',
+        'secondary_button_url',
     ]
 
     # Add portfolio tags to the API response
@@ -49,14 +48,12 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
         
     def get_tags(self, obj):
         tags = []
-        for tag in obj.tags.all():
-            tag_type = tag.tag_type
-            type_name = tag_type.name if tag_type else 'default'
+        for portfolio_tag in obj.portfolio_tags.all():
+            tag = portfolio_tag.tag
             
             tags.append({
                 'tagValue': tag.name,
-                'tagType': type_name,
-                'tagCategory': tag_type.category_type if tag_type else 'default'  # Added this field
+                'tagCategory': tag.category.category_type if tag.category else 'default'
             })
             
         return tags
