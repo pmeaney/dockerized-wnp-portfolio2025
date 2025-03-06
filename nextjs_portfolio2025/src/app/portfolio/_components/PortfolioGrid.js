@@ -8,6 +8,7 @@ export default function PortfolioGrid() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // test
     // Function to fetch portfolio items from the Wagtail API
     const fetchPortfolioItems = async () => {
       try {
