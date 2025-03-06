@@ -1,5 +1,5 @@
 
-[![Build Status](https://github.com/pmeaney/dockerized-wnp-portfolio2025/workflows/build/badge.svg)](https://github.com/pmeaney/dockerized-wnp-portfolio2025/actions)
+[![Build Status](https://github.com/pmeaney/dockerized-wnp-portfolio2025/actions/workflows/z-main.yml/badge.svg)](https://github.com/pmeaney/dockerized-wnp-portfolio2025/actions/workflows/z-main.yml)
 
 # WNP portfolio project
 
