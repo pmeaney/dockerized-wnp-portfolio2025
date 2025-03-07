@@ -1,9 +1,9 @@
 from django import forms
 from django.utils.safestring import mark_safe
-from wagtail.admin.widgets import AdminChooser
+from wagtail.admin.widgets import ChooserWidget
 from .models import TagCategory, PortfolioTag
 
-class TagCreationWidget(AdminChooser):
+class TagCreationWidget(ChooserWidget):
     """
     A custom widget that provides guided tag creation workflow
     """
