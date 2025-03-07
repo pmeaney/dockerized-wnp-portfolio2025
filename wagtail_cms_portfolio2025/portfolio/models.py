@@ -4,7 +4,7 @@ from wagtail.fields import RichTextField
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from .widgets import TagCreationWidget 
 
-# test
+#
 class Tag(models.Model):
     """
     Model for tags with explicit value and category
