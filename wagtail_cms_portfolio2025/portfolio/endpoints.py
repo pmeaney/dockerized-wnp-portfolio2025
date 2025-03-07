@@ -47,13 +47,9 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
         return serializer
         
     def get_tags(self, obj):
-        tags = []
-        for portfolio_tag in obj.portfolio_tags.all():
-            tag = portfolio_tag.tag
-            
-            tags.append({
-                'tagValue': tag.name,
-                'tagCategory': tag.category.category_type if tag.category else 'default'
-            })
-            
-        return tags
+        return [
+            {
+                'tagValue': tag.value,
+                'tagCategory': tag.get_category_display()
+            } for tag in obj.tags.all()
+        ]

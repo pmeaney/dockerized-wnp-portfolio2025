@@ -1,93 +1,45 @@
 from django.db import models
-from django import forms
 from wagtail.models import Page
 from wagtail.fields import RichTextField
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel, PageChooserPanel
-from wagtail.snippets.models import register_snippet
-from modelcluster.fields import ParentalKey
-from modelcluster.models import ClusterableModel
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from .widgets import TagCreationWidget 
 
-from django.contrib import admin
-from .widgets import TagCreationWidget
-
-
-# =========== Tag Models ===========
-# testing
-@register_snippet
-class TagCategory(models.Model):
+class Tag(models.Model):
     """
-    Model for tag categories in the portfolio system.
-    Each tag will belong to one of these predefined categories.
+    Model for tags with explicit value and category
     """
-    name = models.CharField(max_length=100, help_text="Display name for this tag category")
-    
-    # Predefined categories
     CATEGORY_CHOICES = [
         ('year', 'Year'),
-        ('language', 'Programming Language'),
         ('framework', 'Framework'),
+        ('programming_language', 'Programming Language'),
         ('topic', 'Topic'),
         ('subtopic', 'Subtopic'),
-        ('default', 'Default'),
+        ('default', 'Default')
     ]
     
-    category_type = models.CharField(
-        max_length=50, 
+    value = models.CharField(
+        max_length=255, 
+        help_text="Tag value"
+    )
+    
+    category = models.CharField(
+        max_length=50,
         choices=CATEGORY_CHOICES,
         default='default',
-        help_text="The category this tag represents"
+        help_text="Category of the tag"
     )
     
-    panels = [
-        FieldPanel('name'),
-        FieldPanel('category_type'),
-    ]
-    
     def __str__(self):
-        return self.name
+        return f"{self.value} ({self.get_category_display()})"
     
     class Meta:
-        verbose_name = "Tag Category"
-        verbose_name_plural = "Tag Categories"
-
-
-@register_snippet
-class PortfolioTag(models.Model):
-    """
-    Tags that can be applied to portfolio items.
-    Each tag belongs to a specific category.
-    """
-    name = models.CharField(max_length=255, help_text="The tag name/value")
-    
-    # Link to the tag category
-    category = models.ForeignKey(
-        'TagCategory',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='tags',
-        help_text="The category this tag belongs to"
-    )
-    
-    panels = [
-        FieldPanel('name'),
-        FieldPanel('category'),
-    ]
-    
-    def __str__(self):
-        category_type = self.category.category_type if self.category else "default"
-        return f"{self.name} ({category_type})"
-    
-    class Meta:
-        verbose_name = "Portfolio Tag"
-        verbose_name_plural = "Portfolio Tags"
-
-
-# =========== Portfolio Item Model ===========
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+        unique_together = ('value', 'category')
 
 class PortfolioItem(Page):
     """
-    Individual portfolio project page with updated button fields.
+    Individual portfolio project page with tags and buttons.
     """
     date = models.DateField("Post date")
     intro = models.CharField(max_length=250)
@@ -105,7 +57,7 @@ class PortfolioItem(Page):
     # Button fields
     main_button_text = models.CharField(
         max_length=50,
-        blank=False,  # Making it required
+        blank=False,
         help_text="Text for the main call-to-action button"
     )
     
@@ -120,11 +72,10 @@ class PortfolioItem(Page):
         help_text="URL for the secondary button"
     )
     
-    # Tags - using ParentalManyToManyField to simplify the relationship
+    # Tags relationship
     tags = models.ManyToManyField(
-        'PortfolioTag',
+        'Tag',
         blank=True,
-        through='PortfolioTagItem',
         related_name='portfolio_items'
     )
     
@@ -155,33 +106,6 @@ class PortfolioItem(Page):
         verbose_name = "Portfolio Item"
         verbose_name_plural = "Portfolio Items"
 
-
-class PortfolioTagItem(models.Model):
-    """
-    The through model for linking tags to portfolio items.
-    """
-    tag = models.ForeignKey(
-        'PortfolioTag',
-        on_delete=models.CASCADE,
-        related_name='+'
-    )
-    
-    portfolio_item = ParentalKey(
-        'PortfolioItem',
-        on_delete=models.CASCADE,
-        related_name='portfolio_tags'
-    )
-    
-    panels = [
-        FieldPanel('tag'),
-    ]
-    
-    class Meta:
-        unique_together = ('tag', 'portfolio_item')
-
-
-# =========== Portfolio Index Page ===========
-
 class PortfolioIndexPage(Page):
     """
     Index page for listing portfolio items.
@@ -195,8 +119,6 @@ class PortfolioIndexPage(Page):
     # This restricts what page types can be created beneath this index page
     subpage_types = ['portfolio.PortfolioItem']
     
-    
-    
     class Meta:
         verbose_name = "Portfolio Index Page"
         verbose_name_plural = "Portfolio Index Pages"
@@ -205,50 +127,3 @@ class PortfolioIndexPage(Page):
         context = super().get_context(request)
         context['portfolio_items'] = PortfolioItem.objects.child_of(self).live().order_by('-date')
         return context
-    
-
-class TagCategoryAdmin(admin.ModelAdmin):
-    """Custom admin interface for Tag Categories"""
-    list_display = ('name', 'category_type')
-    list_filter = ('category_type',)
-    
-    def get_panels(self):
-        """
-        Custom panels that guide the user through category creation
-        Mental Model: Like a friendly tour guide for tag taxonomy
-        """
-        return [
-            MultiFieldPanel([
-                FieldPanel('name', help_text="Choose a descriptive name for this category"),
-                FieldPanel('category_type', help_text="Select the most appropriate type for this category")
-            ], heading="Create Tag Category", classname="collapsible")
-        ]
-
-class PortfolioTagAdmin(admin.ModelAdmin):
-    """Enhanced admin for Portfolio Tags"""
-    def get_panels(self):
-        """
-        Guided tag creation workflow
-        """
-        return [
-            MultiFieldPanel([
-                FieldPanel('name', help_text="Enter the specific tag name"),
-                FieldPanel('category', help_text="REQUIRED: Select the category this tag belongs to")
-            ], heading="Create Portfolio Tag", classname="collapsible intro")
-        ]
-
-    def get_form(self, request, obj=None, **kwargs):
-        """
-        Custom form logic to guide tag creation
-        """
-        form = super().get_form(request, obj, **kwargs)
-        
-        # Check if any categories exist
-        if not TagCategory.objects.exists():
-            # Add a form-level validation warning
-            form.base_fields['category'].help_text = (
-                "⚠️ NO CATEGORIES EXIST! "
-                "Please create a Tag Category first in the Tag Categories admin."
-            )
-        
-        return form
