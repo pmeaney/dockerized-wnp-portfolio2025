@@ -8,6 +8,7 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 
 from django.contrib import admin
+from .widgets import TagCreationWidget
 
 
 # =========== Tag Models ===========
