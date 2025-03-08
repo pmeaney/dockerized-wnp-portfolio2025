@@ -3,6 +3,6 @@
 .git/
 build/
 node_modules/
-data/
+postgres_data/
 backup/
 
