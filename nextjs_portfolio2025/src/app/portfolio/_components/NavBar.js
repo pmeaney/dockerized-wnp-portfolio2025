@@ -32,7 +32,7 @@ export default function NavBar() {
         target?.classList.remove("is-active");
       };
 
-      // Add click event listeners to all navbar-burger elements
+      // Add click event listeners to all navbar-burger elements ...test
       navbarBurgers.forEach((burger) => {
         burger.addEventListener("click", () => {
           // Get the ID of the target menu from the "data-target" attribute

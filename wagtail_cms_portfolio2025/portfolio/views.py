@@ -3,8 +3,8 @@ from django.http import JsonResponse
 from django.views.generic import View
 from django import forms
 from .models import Tag
-from django.urls import reverse
 
+# 
 class TagForm(forms.ModelForm):
     class Meta:
         model = Tag
