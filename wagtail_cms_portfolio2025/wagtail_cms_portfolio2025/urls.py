@@ -14,8 +14,8 @@ from portfolio.endpoints import PortfolioAPIViewSet
 # Register the custom portfolio viewset
 api_router.register_endpoint('portfolio', PortfolioAPIViewSet)
 
-
 urlpatterns = [
+    path('portfolio/', include('portfolio.urls')),
     path('api/v2/', api_router.urls),
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),

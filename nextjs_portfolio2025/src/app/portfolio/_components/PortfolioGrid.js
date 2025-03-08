@@ -11,33 +11,15 @@ export default function PortfolioGrid() {
     // Function to fetch portfolio items from the Wagtail API
     const fetchPortfolioItems = async () => {
       try {
-        setLoading(true);
-        // Using the custom portfolio API endpoint we created
-        const response = await fetch('/api/v2/portfolio/');
+        // setLoading(true);
+        // // Using the custom portfolio API endpoint we created
+        // const response = await fetch('/api/v2/portfolio/');
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+        // if (!response.ok) {
+        //   throw new Error(`HTTP error! Status: ${response.status}`);
+        // }
         
-        const data = await response.json();
-        
-        // Transform the data if necessary to match the component props
-        const items = data.items ? data.items.map(item => ({
-          id: item.id,
-          title: item.title,
-          subtitle: item.meta?.subtitle || null,
-          thumbnail: item.thumbnail,
-          tags: item.tags || [],
-          main_button_left_text: item.main_button_left_text || 'Preview',
-          main_button_left_url: item.main_button_left_url || '#',
-          secondary_button_right_text: item.secondary_button_right_text || 'Source Code',
-          secondary_button_right_url: item.secondary_button_right_url || '#'
-        })) : [];
-        
-        setPortfolioItems(items);
-      } catch (err) {
-        console.error("Error fetching portfolio items:", err);
-        setError(err.message);
+        // const data = await response.json();
         
         // For development - fallback to sample data when API isn't available
         setPortfolioItems(samplePortfolioItems);
@@ -59,18 +41,18 @@ export default function PortfolioGrid() {
     );
   }
 
-  if (error) {
-    return (
-      <section className="section" id="portfolio">
-        <div className="container">
-          <div className="notification is-danger">
-            <p>Error loading portfolio items: {error}</p>
-            <p>Please try again later or contact the administrator.</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <section className="section" id="portfolio">
+  //       <div className="container">
+  //         <div className="notification is-danger">
+  //           <p>Error loading portfolio items: {error}</p>
+  //           <p>Please try again later or contact the administrator.</p>
+  //         </div>
+  //       </div>
+  //     </section>
+  //   );
+  // }
 
   return (
     <section className="section" id="portfolio">

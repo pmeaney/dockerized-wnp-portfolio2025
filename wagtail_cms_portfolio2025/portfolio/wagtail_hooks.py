@@ -94,38 +94,18 @@ def tag_creation_styles():
 @hooks.register('insert_global_admin_js')
 def tag_creation_widget_js():
     """Add JavaScript for the tag creation widget modal workflow"""
-    # Ensure Wagtail's modal workflow script is loaded
     return format_html(
         """
-        <script src="{}"></script>
         <script>
-        // Make sure modal workflow is initialized
         document.addEventListener('DOMContentLoaded', function() {{
-            // Reference to Wagtail's ModalWorkflow
-            var ModalWorkflow = window.ModalWorkflow;
-            
-            // If not available, try to import it
-            if (!ModalWorkflow) {{
-                try {{
-                    // This is a fallback for newer Wagtail versions
-                    ModalWorkflow = window.wagtail.admin.modalWorkflow;
-                }} catch(e) {{
-                    console.error('Modal workflow not found:', e);
-                }}
+            // Make ModalWorkflow available globally
+            window.ModalWorkflow = window.ModalWorkflow || 
+                                  (window.wagtail && window.wagtail.admin && window.wagtail.admin.modalWorkflow);
+                
+            if (!window.ModalWorkflow) {{
+                console.warn('ModalWorkflow not found - tag creation modals may not work properly');
             }}
-            
-            // Define a global to make it available to inline scripts
-            window.PortfolioModalWorkflow = ModalWorkflow || function(options) {{
-                // Fallback: just open in a new tab if modal not available
-                console.warn('Modal workflow not available, opening in new tab');
-                window.open(options.url, '_blank');
-                if (options.onload && options.onload.close) {{
-                    // Still provide a way to refresh when returning
-                    alert('After creating, please return to this page and refresh to continue.');
-                }}
-            }};
         }});
         </script>
-        """,
-        static('wagtailadmin/js/modal-workflow.js')
+        """
     )
