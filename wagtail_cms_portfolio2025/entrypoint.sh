@@ -12,6 +12,10 @@ echo "DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL"
 echo "DJANGO_SUPERUSER_PASSWORD: [REDACTED]"
 echo "========================================"
 
+# Create migrations if they don't exist
+echo "Creating migrations if needed..."
+python manage.py makemigrations portfolio
+
 # Apply database migrations
 echo "Applying database migrations..."
 python manage.py migrate

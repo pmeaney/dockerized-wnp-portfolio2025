@@ -117,16 +117,15 @@ jobs:
           scp postgres_portfolio2025/.postgres-env.env prod:~/postgres_portfolio2025/.postgres-env.env
           
           # Run the container on the remote server
-          ssh prod "cd ~ && \
-            echo 'Creating database container...' && \
-            docker run -d \
-              --name postgres-prod-wnp-portfolio-2025 \
-              --network main-network--npm020325 \
-              --env-file ./postgres_portfolio2025/.postgres-env.env \
-              -p 5432:5432 \
-              -v \$(pwd)/postgres_portfolio2025/postgres_data:/var/lib/postgresql/data \
-              -v \$(pwd)/postgres_portfolio2025/init-scripts:/docker-entrypoint-initdb.d \
-              postgres:17"
+          ssh prod "docker volume create postgres-prod-data-volume && \
+          docker run -d \
+            --name postgres-prod-wnp-portfolio-2025 \
+            --network main-network--npm020325 \
+            --env-file ./postgres_portfolio2025/.postgres-env.env \
+            -p 5432:5432 \
+            -v postgres-prod-data-volume:/var/lib/postgresql/data \
+            -v \$(pwd)/postgres_portfolio2025/init-scripts:/docker-entrypoint-initdb.d \
+            postgres:17"
           
           # Verify the container is running in a separate command
           CONTAINER_STATUS=$(ssh prod "docker ps -f name=postgres-prod-wnp-portfolio-2025 --format '{{.Status}}'")
