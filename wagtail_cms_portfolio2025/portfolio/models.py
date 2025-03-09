@@ -1,52 +1,111 @@
 from django.db import models
-from wagtail.models import Page
-from wagtail.fields import RichTextField
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel
-from .widgets import TagCreationWidget 
+from modelcluster.fields import ParentalKey
 
-#
-class Tag(models.Model):
-    """
-    Model for tags with explicit value and category
-    """
-    CATEGORY_CHOICES = [
-        ('year', 'Year'),
-        ('framework', 'Framework'),
-        ('programming_language', 'Programming Language'),
-        ('topic', 'Topic'),
-        ('subtopic', 'Subtopic'),
-        ('default', 'Default')
+from wagtail.models import Page, Orderable
+from wagtail.fields import RichTextField
+from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
+from wagtail.images.models import Image
+from wagtail.images.models import Image
+from wagtail.snippets.models import register_snippet
+
+
+@register_snippet
+class TagType(models.Model):
+    """Tag type for Bulma CSS styling"""
+    NAME_CHOICES = [
+        ('is-info', 'Info'),
+        ('is-success', 'Success'),
+        ('is-warning', 'Warning'),
+        ('is-danger', 'Danger'),
+        ('is-primary', 'Primary'),
+        ('is-link', 'Link'),
+        ('is-dark', 'Dark'),
+        ('is-light', 'Light'),
     ]
     
-    value = models.CharField(
-        max_length=255, 
-        help_text="Tag value"
-    )
+    name = models.CharField(max_length=100)
+    style = models.CharField(max_length=20, choices=NAME_CHOICES, default='is-info')
     
-    category = models.CharField(
-        max_length=50,
-        choices=CATEGORY_CHOICES,
-        default='default',
-        help_text="Category of the tag"
-    )
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('style'),
+    ]
     
     def __str__(self):
-        return f"{self.value} ({self.get_category_display()})"
-    
-    class Meta:
-        verbose_name = "Tag"
-        verbose_name_plural = "Tags"
-        unique_together = ('value', 'category')
+        return f"{self.name} ({self.get_style_display()})"
 
+
+# Portfolio Tag with TagType
+@register_snippet
+class PortfolioTag(models.Model):
+    name = models.CharField(max_length=255)
+    tag_type = models.ForeignKey(
+        'TagType',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('tag_type'),
+    ]
+    
+    def __str__(self):
+        return self.name
+
+
+# Portfolio Item Tags
+class PortfolioItemPortfolioTag(models.Model):
+    tag = models.ForeignKey(
+        'PortfolioTag',
+        on_delete=models.CASCADE,
+        related_name='+'
+    )
+    portfolio_item = ParentalKey(
+        'PortfolioItem',
+        on_delete=models.CASCADE,
+        related_name='portfolio_tags'
+    )
+    
+    panels = [
+        FieldPanel('tag'),
+    ]
+
+
+# Portfolio Index Page
+class PortfolioIndexPage(Page):
+    intro = RichTextField(blank=True)
+    
+    content_panels = Page.content_panels + [
+        FieldPanel('intro'),
+    ]
+    
+    def get_context(self, request):
+        context = super().get_context(request)
+        # Get all the direct children of this page that are live
+        portfolio_items = self.get_children().live().order_by('-first_published_at')
+        context['portfolio_items'] = portfolio_items
+        return context
+    
+    # Allow only PortfolioItem pages as children
+    subpage_types = ['portfolio.PortfolioItem']
+    
+    # Allow this page to be created under HomePage
+    parent_page_types = ['home.HomePage']
+        
+    class Meta:
+        verbose_name = "Portfolio Index Page"
+        verbose_name_plural = "Portfolio Index Pages"
+
+
+# Portfolio Item Page
 class PortfolioItem(Page):
-    """
-    Individual portfolio project page with tags and buttons.
-    """
     date = models.DateField("Post date")
     intro = models.CharField(max_length=250)
     body = RichTextField(blank=True)
     
-    # Featured image (thumbnail)
     thumbnail = models.ForeignKey(
         'wagtailimages.Image',
         null=True,
@@ -55,76 +114,31 @@ class PortfolioItem(Page):
         related_name='+'
     )
     
-    # Button fields
-    main_button_text = models.CharField(
-        max_length=50,
-        blank=False,
-        help_text="Text for the main call-to-action button"
-    )
+    # Buttons
+    main_button_text = models.CharField(max_length=50, blank=True)
+    secondary_button_text = models.CharField(max_length=50, blank=True, null=True)
+    secondary_button_url = models.URLField(blank=True, null=True)
     
-    secondary_button_text = models.CharField(
-        max_length=50,
-        blank=True,
-        help_text="Text for the secondary button (optional)"
-    )
+    # Only allow this page to be created under PortfolioIndexPage
+    parent_page_types = ['portfolio.PortfolioIndexPage']
     
-    secondary_button_url = models.URLField(
-        blank=True,
-        help_text="URL for the secondary button"
-    )
-    
-    # Tags relationship
-    tags = models.ManyToManyField(
-        'Tag',
-        blank=True,
-        related_name='portfolio_items'
-    )
+    # Don't allow any children underneath portfolio items
+    subpage_types = []
     
     content_panels = Page.content_panels + [
-        FieldPanel('date'),
+        MultiFieldPanel([
+            FieldPanel('date'),
+            FieldPanel('thumbnail'),
+        ], heading="Portfolio Item Metadata"),
         FieldPanel('intro'),
         FieldPanel('body'),
-        FieldPanel('thumbnail'),
         MultiFieldPanel([
             FieldPanel('main_button_text'),
             FieldPanel('secondary_button_text'),
             FieldPanel('secondary_button_url'),
-        ], heading="Buttons"),
-        FieldPanel('tags', widget=TagCreationWidget),
+        ], heading="Button Links"),
+        InlinePanel('portfolio_tags', label="Portfolio Tags"),
     ]
     
-    # This restricts where this page type can be created
-    parent_page_types = ['portfolio.PortfolioIndexPage']
-    
-    # This prevents any page types from being created beneath portfolio items
-    subpage_types = []
-
-    def get_main_button_url(self):
-        """Returns the page slug to use as the main button URL"""
-        return self.slug
-    
-    class Meta:
-        verbose_name = "Portfolio Item"
-        verbose_name_plural = "Portfolio Items"
-
-class PortfolioIndexPage(Page):
-    """
-    Index page for listing portfolio items.
-    """
-    intro = RichTextField(blank=True)
-    
-    content_panels = Page.content_panels + [
-        FieldPanel('intro')
-    ]
-
-    # This restricts what page types can be created beneath this index page
-    subpage_types = ['portfolio.PortfolioItem']
-    
-    class Meta:
-        verbose_name = "Portfolio Index Page"
-        verbose_name_plural = "Portfolio Index Pages"
-    
-    def get_context(self, request):
-        context = super().get_context(request)
-        context['portfolio_items'] = PortfolioItem.objects.child_of(self).live().order_by('-date')
-        return context
+    def main_tags(self):
+        return self.portfolio_tags.all()
