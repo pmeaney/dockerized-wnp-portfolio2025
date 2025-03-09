@@ -4,6 +4,10 @@ from rest_framework import serializers
 from wagtail.images.models import Image
 from .models import PortfolioItem
 import re
+import logging
+
+# Get logger
+logger = logging.getLogger(__name__)
 
 # Custom API endpoint for portfolio items
 class PortfolioAPIViewSet(PagesAPIViewSet):
@@ -29,7 +33,7 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
 
     # Custom fields to add to the API response
     body_fields = PagesAPIViewSet.body_fields + [
-        'body',  # Make sure body is included
+        'body',
         'thumbnail',
         'main_button_text',
         'secondary_button_text',
@@ -98,22 +102,52 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
         images = []
         for image_id in image_ids:
             try:
+                # First check if the image exists in the database
                 image = Image.objects.get(id=image_id)
-                # Use a simplified image serializer
-                image_data = {
-                    'id': image.id,
-                    'title': image.title,
-                    'width': image.width,
-                    'height': image.height,
-                    'url': image.get_rendition('original').url,
-                    'thumbnail': image.get_rendition('fill-300x200').url,
-                }
-                images.append(image_data)
+                
+                # Then try to access the file safely
+                try:
+                    original_url = image.get_rendition('original').url
+                    thumbnail_url = image.get_rendition('fill-300x200').url
+                    
+                    # Success - add complete image data
+                    image_data = {
+                        'id': image_id,
+                        'title': image.title,
+                        'width': image.width,
+                        'height': image.height,
+                        'url': original_url,
+                        'thumbnail': thumbnail_url,
+                        'status': 'ok'
+                    }
+                except Exception as file_error:
+                    # Image record exists but file is missing
+                    logger.warning(f"Image file missing for ID {image_id}: {str(file_error)}")
+                    image_data = {
+                        'id': image_id,
+                        'title': image.title,
+                        'width': image.width if hasattr(image, 'width') else 0,
+                        'height': image.height if hasattr(image, 'height') else 0,
+                        'url': None,
+                        'thumbnail': None,
+                        'status': 'file_missing',
+                        'error': 'Image file not found'
+                    }
             except Image.DoesNotExist:
-                # Image not found, add a placeholder
-                images.append({
+                # Image record doesn't exist in database
+                logger.warning(f"Image with ID {image_id} not found in database")
+                image_data = {
                     'id': image_id,
-                    'error': 'Image not found'
-                })
+                    'title': 'Unknown Image',
+                    'width': 0,
+                    'height': 0,
+                    'url': None,
+                    'thumbnail': None,
+                    'status': 'not_found',
+                    'error': 'Image not found in database'
+                }
+            
+            # Add the image data to our results
+            images.append(image_data)
                 
         return images
