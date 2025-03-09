@@ -28,10 +28,9 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
     # Custom fields to add to the API response
     body_fields = PagesAPIViewSet.body_fields + [
         'thumbnail',
-        'main_button_left_text',
-        'main_button_left_url',
-        'secondary_button_right_text',
-        'secondary_button_right_url',
+        'main_button_text',
+        'secondary_button_text',
+        'secondary_button_url',
     ]
 
     # Add portfolio tags to the API response

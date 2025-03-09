@@ -115,10 +115,9 @@ class PortfolioItem(Page):
     )
     
     # Buttons
-    main_button_left_text = models.CharField(max_length=50, blank=True)
-    main_button_left_url = models.URLField(blank=True)
-    secondary_button_right_text = models.CharField(max_length=50, blank=True)
-    secondary_button_right_url = models.URLField(blank=True)
+    main_button_text = models.CharField(max_length=50, blank=True)
+    secondary_button_text = models.CharField(max_length=50, blank=True, null=True)
+    secondary_button_url = models.URLField(blank=True, null=True)
     
     # Only allow this page to be created under PortfolioIndexPage
     parent_page_types = ['portfolio.PortfolioIndexPage']
@@ -134,10 +133,9 @@ class PortfolioItem(Page):
         FieldPanel('intro'),
         FieldPanel('body'),
         MultiFieldPanel([
-            FieldPanel('main_button_left_text'),
-            FieldPanel('main_button_left_url'),
-            FieldPanel('secondary_button_right_text'),
-            FieldPanel('secondary_button_right_url'),
+            FieldPanel('main_button_text'),
+            FieldPanel('secondary_button_text'),
+            FieldPanel('secondary_button_url'),
         ], heading="Button Links"),
         InlinePanel('portfolio_tags', label="Portfolio Tags"),
     ]

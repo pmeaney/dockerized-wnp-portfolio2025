@@ -12,8 +12,40 @@ echo "DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL"
 echo "DJANGO_SUPERUSER_PASSWORD: [REDACTED]"
 echo "========================================"
 
-# Apply database migrations
-echo "Applying database migrations..."
+# Check if PostgreSQL is ready
+echo "Checking if PostgreSQL is ready..."
+max_attempts=10
+attempt=1
+
+while [ $attempt -le $max_attempts ]; do
+    echo "Connection attempt $attempt/$max_attempts"
+    
+    # Use PGPASSWORD environment variable to avoid password prompt
+    export PGPASSWORD=$SQL_PASSWORD
+    
+    # Try to connect to PostgreSQL
+    if pg_isready -h $SQL_HOST -p ${SQL_PORT:-5432} -U $SQL_USER -d $SQL_DATABASE -t 1; then
+        echo "PostgreSQL is ready!"
+        break
+    else
+        echo "PostgreSQL is not ready yet..."
+    fi
+    
+    # Exit if we've reached the maximum attempts
+    if [ $attempt -eq $max_attempts ]; then
+        echo "Failed to connect to PostgreSQL after $max_attempts attempts"
+        exit 1
+    fi
+    
+    # Wait before the next attempt
+    echo "Waiting 3 seconds before next attempt..."
+    sleep 3
+    attempt=$((attempt+1))
+done
+
+
+echo "Creating & Applying database migrations..."
+python manage.py makemigrations portfolio
 python manage.py migrate
 
 # Create superuser only if it doesn't exist
