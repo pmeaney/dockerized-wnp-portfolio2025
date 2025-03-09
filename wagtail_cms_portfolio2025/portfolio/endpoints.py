@@ -37,12 +37,21 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
         
-        if kwargs.get('many', False):
-            # This is a list serializer
-            return serializer
+        # Check if this is a list serializer or child serializer
+        if hasattr(serializer, 'child'):
+            # This is a list serializer, add field to the child serializer
+            child = serializer.child
+            child.fields['tags'] = serializers.SerializerMethodField()
             
-        # Add a method field for tags
-        serializer.fields['tags'] = serializers.SerializerMethodField()
+            # Add the method to the child serializer class
+            child.__class__.get_tags = self.get_tags
+        elif hasattr(serializer, 'fields'):
+            # This is a detail serializer, add field directly
+            serializer.fields['tags'] = serializers.SerializerMethodField()
+            
+            # Add the method to the serializer class
+            serializer.__class__.get_tags = self.get_tags
+            
         return serializer
         
     def get_tags(self, obj):
@@ -50,11 +59,14 @@ class PortfolioAPIViewSet(PagesAPIViewSet):
         for portfolio_tag in obj.portfolio_tags.all():
             tag_obj = portfolio_tag.tag
             tag_type = tag_obj.tag_type
+            
             type_name = tag_type.name if tag_type else 'default'
+            style_class = tag_type.style if tag_type else 'is-info'
             
             tags.append({
                 'tagValue': tag_obj.name,
-                'tagType': type_name
+                'tagType': type_name,
+                'tagStyle': style_class
             })
             
         return tags

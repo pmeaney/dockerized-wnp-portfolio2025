@@ -13,40 +13,47 @@ echo "DJANGO_SUPERUSER_EMAIL: $DJANGO_SUPERUSER_EMAIL"
 echo "DJANGO_SUPERUSER_PASSWORD: [REDACTED]"
 echo "========================================"
 
-# Check if PostgreSQL is ready
-echo "Checking if PostgreSQL is ready..."
-max_attempts=10
-attempt=1
 
-while [ $attempt -le $max_attempts ]; do
-    echo "Connection attempt $attempt/$max_attempts"
-    
-    # Use PGPASSWORD environment variable to avoid password prompt
-    export PGPASSWORD=$SQL_PASSWORD
-    
-    # Try to connect to PostgreSQL
-    if pg_isready -h $SQL_HOST -p ${SQL_PORT:-5432} -U $SQL_USER -d $SQL_DATABASE -t 1; then
-        echo "PostgreSQL is ready!"
-        break
-    else
-        echo "PostgreSQL is not ready yet..."
-    fi
-    
-    # Exit if we've reached the maximum attempts
-    if [ $attempt -eq $max_attempts ]; then
-        echo "Failed to connect to PostgreSQL after $max_attempts attempts"
-        exit 1
-    fi
-    
-    # Wait before the next attempt
-    echo "Waiting 3 seconds before next attempt..."
+# Function to test if postgres is ready
+postgres_ready() {
+    python << END
+import sys
+import psycopg2
+try:
+    conn = psycopg2.connect(
+        dbname="${SQL_DATABASE}",
+        user="${SQL_USER}",
+        password="${SQL_PASSWORD}",
+        host="${SQL_HOST}",
+        port="${SQL_PORT}"
+    )
+except psycopg2.OperationalError:
+    sys.exit(1)
+sys.exit(0)
+END
+}
+
+# Wait for postgres to become available
+echo "Waiting for PostgreSQL..."
+RETRIES=10
+until postgres_ready || [ $RETRIES -eq 0 ]; do
+    echo "Waiting for PostgreSQL to become available... $((RETRIES)) remaining attempts..."
+    RETRIES=$((RETRIES-1))
     sleep 3
-    attempt=$((attempt+1))
 done
 
+if [ $RETRIES -eq 0 ]; then
+    echo "Error: PostgreSQL not available after multiple attempts"
+    exit 1
+fi
 
-# Apply database migrations
-echo "Applying database migrations..."
+echo "PostgreSQL is available!"
+
+
+# Generate migrations
+python manage.py makemigrations
+
+# Apply migrations
 python manage.py migrate
 
 # Create superuser only if it doesn't exist
