@@ -6,3 +6,4 @@
 postgres_portfolio2025/postgres_data/
 
 .venv
+liveExample.http

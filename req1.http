@@ -5,3 +5,7 @@ Accept: application/json
 ###
 GET http://0.0.0.0:8000/api/v2/portfolio/?fields=*
 Accept: application/json
+
+### prod
+GET https://liveSite.com/api/v2/portfolio/?fields=*
+Accept: application/json
