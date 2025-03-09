@@ -118,13 +118,14 @@ jobs:
           
           # Run the container on the remote server
           ssh prod "docker volume create postgres-prod-data-volume && \
+          docker volume create postgres-init-scripts-volume-portfolio2025 && \
           docker run -d \
             --name postgres-prod-wnp-portfolio-2025 \
             --network main-network--npm020325 \
             --env-file ./postgres_portfolio2025/.postgres-env.env \
             -p 5432:5432 \
             -v postgres-prod-data-volume:/var/lib/postgresql/data \
-            -v \$(pwd)/postgres_portfolio2025/init-scripts:/docker-entrypoint-initdb.d \
+             -v postgres-init-scripts-volume-portfolio2025:/docker-entrypoint-initdb.d \
             postgres:17"
           
           # Verify the container is running in a separate command
