@@ -110,12 +110,12 @@ jobs:
             StrictHostKeyChecking no
           END
 
-          # Create directories on remote server for the env file and volumes
-          ssh prod "mkdir -p ~/postgres_portfolio2025/postgres_data ~/postgres_portfolio2025/init-scripts"
-          
+          # Create directory on remote server for the env file
+          ssh prod "mkdir -p ~/postgres_portfolio2025"
+                    
           # Copy the environment file to the remote server
           scp postgres_portfolio2025/.postgres-env.env prod:~/postgres_portfolio2025/.postgres-env.env
-          
+                    
           # Run the container on the remote server
           ssh prod "docker volume create postgres-prod-data-volume && \
           docker volume create postgres-init-scripts-volume-portfolio2025 && \
@@ -124,8 +124,8 @@ jobs:
             --network main-network--npm020325 \
             --env-file ./postgres_portfolio2025/.postgres-env.env \
             -p 5432:5432 \
-            -v ~/postgres_portfolio2025/postgres_data:/var/lib/postgresql/data \
-             -v ~/postgres_portfolio2025/init-scripts:/docker-entrypoint-initdb.d \
+            -v postgres-prod-data-volume:/var/lib/postgresql/data \
+            -v postgres-init-scripts-volume-portfolio2025:/docker-entrypoint-initdb.d \
             postgres:17"
           
           # Verify the container is running in a separate command
